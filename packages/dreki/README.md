@@ -1,6 +1,6 @@
 # 🐉 dreki
 
-An **[Entity-Component System](https://github.com/SanderMertens/ecs-faq)** (ecs) library written in **Typescript** 🚀
+An **[Entity-Component System](https://github.com/SanderMertens/ecs-faq)** (ecs) library written in Typescript.
 
 > ### **⚠** <br>
 >
