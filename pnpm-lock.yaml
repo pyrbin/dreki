@@ -41,6 +41,15 @@ importers:
       dreki: link:../../packages/dreki
     specifiers:
       dreki: workspace:*
+  packages/3d:
+    dependencies:
+      '@dimforge/rapier3d': 0.4.1
+      dreki: link:../dreki
+      three: 0.126.1
+    specifiers:
+      '@dimforge/rapier3d': ^0.4.1
+      dreki: workspace:*
+      three: ^0.126.1
   packages/collections:
     dependencies:
       '@dreki.land/shared': link:../shared
@@ -643,6 +652,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-q79rbwlVmTNKP9O6XxcMDj81CEOn/kQHbTFdRleW0tFUv98S1EyEAE9vLPPzO6WnQipHnaozxB1zMhHy0aQn8Q==
+  /@dimforge/rapier3d/0.4.1:
+    dev: false
+    resolution:
+      integrity: sha512-XptLyqPoFRZ+kfxFAigO3WWsNlTzL7yMUAPsDkny8C6HF9XLTC1KEh7u6ssNG9MIh58PomjqQtocW8zTyj4G2g==
   /@istanbuljs/load-nyc-config/1.1.0:
     dependencies:
       camelcase: 5.3.1
@@ -4380,6 +4393,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-cAGWPIyOHU6zlmg88jwm7VRyXnMN7iV68OGAbYDk/Mh/xC/pzVPlQtY6ngoIH/5/tciuhGfvESU8GrHrcxD56w==
+  /three/0.126.1:
+    dev: false
+    resolution:
+      integrity: sha512-eOEXnZeE1FDV0XgL1u08auIP13jxdN9LQBAEmlErYzMxtIIfuGIAZbijOyookALUhqVzVOx0Tywj6n192VM+nQ==
   /throat/6.0.1:
     dev: true
     resolution:

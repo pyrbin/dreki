@@ -1,0 +1,21 @@
+{
+  "name": "@dreki.land/3d",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "main": "out/mod.js",
+  "types": "out/mod.d.ts",
+  "exports": {
+    ".": "./out/mod.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "rimraf out && tsc"
+  },
+  "dependencies": {
+    "three": "^0.126.1",
+    "@dimforge/rapier3d": "^0.4.1",
+    "dreki": "workspace:*"
+  }
+}
