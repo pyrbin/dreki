@@ -1,0 +1,35 @@
+{
+  "name": "dreki",
+  "scripts": {
+    "build": "pnpm build --filter=\"@dreki.land/*\" --filter=\"dreki\"",
+    "lint": "pnpm check-format",
+    "changeset": "changeset",
+    "format": "prettier --write packages/ --config .prettierrc --ignore-path .gitignore",
+    "check-format": "prettier --check packages/ --config .prettierrc --ignore-path .gitignore",
+    "test": "jest --testTimeout=10000",
+    "test:watch": "jest --watch --testTimeout=10000",
+    "release": "pnpm build && pnpm publish --filter=\"@dreki.land/*\" --filter=\"dreki\""
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.14.1",
+    "@swc/jest": "^0.1.2",
+    "@types/jest": "^26.0.20",
+    "jest": "^27.0.0-next.4",
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.2.3"
+  },
+  "jest": {
+    "verbose": true,
+    "testEnvironment": "node",
+    "rootDir": "packages/",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "transform": {
+      "^.+\\.(t|j)sx?$": [
+        "@swc/jest"
+      ]
+    }
+  }
+}
