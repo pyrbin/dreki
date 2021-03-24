@@ -22,7 +22,8 @@ function alive_system() {
   }
 }
 
-const world = World.build()({ capacity: 200 })
+const world = World.build()
+  .with({ capacity: 200 })
   .stage_after(Stages.Update, "my_custom_stage")
   .systems("my_custom_stage", alive_system)
   .done();
