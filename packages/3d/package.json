@@ -14,8 +14,11 @@
     "build": "rimraf out && tsc"
   },
   "dependencies": {
-    "three": "^0.126.1",
     "@dimforge/rapier3d": "^0.4.1",
-    "dreki": "workspace:*"
+    "dreki": "workspace:*",
+    "three": "^0.126.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.126.1"
   }
 }
