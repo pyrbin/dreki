@@ -18,7 +18,7 @@ export class SparseSet<I extends number, T> implements Iterable<T> {
       this.sparse.realloc(index + 1);
       this.sparse.resize(this.sparse.capacity);
     }
-    if (this.sparse.raw[index]) {
+    if (this.sparse.raw[index] !== undefined) {
       this.dense.raw[this.sparse.raw[index]!] = value;
       return value;
     }
