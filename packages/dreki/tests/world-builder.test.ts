@@ -42,10 +42,3 @@ test("add resources", () => {
   const world = World.build().resources(new Time(256)).done();
   expect(world.resource(Time).dt).toBe(256);
 });
-
-test("test example", () => {
-  const wrld = World.build()
-    .stage_after("update", "my-stage", new Stage(() => "im cool system"))
-    .resources(new Time(0.016667))
-    .done();
-});

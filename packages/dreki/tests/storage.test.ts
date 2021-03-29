@@ -15,10 +15,10 @@ test("insert / remove", () => {
 
   set.insert(entity, pos, ComponentFlags.Empty);
 
-  expect(set.len).toBe(1);
+  expect(set.length).toBe(1);
   expect(set.remove(entity)).toBe(true);
   expect(set.get(entity)).toBe(undefined);
-  expect(set.len).toBe(0);
+  expect(set.length).toBe(0);
   expect(set.remove(entity)).toBe(false);
 });
 
