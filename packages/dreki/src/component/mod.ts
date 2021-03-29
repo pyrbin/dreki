@@ -1,6 +1,8 @@
 import type { Type, record, ExcludeMethods } from "@dreki.land/shared";
 import { Entity } from "../entity/mod";
 
+export const INVALID_COMPONENT_ID = -1;
+
 export type ComponentId = number;
 export type ComponentMask = number;
 

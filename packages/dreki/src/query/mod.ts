@@ -7,8 +7,7 @@ import {
   get_component_info_or_register,
 } from "../component/register";
 import { Entity } from "../entity/mod";
-import type { EntitySlice } from "../storage/mod";
-import type { ComponentSparseSet } from "../storage/components";
+import type { EntitySlice, ComponentStorage } from "../storage/components";
 import {
   ComponentFilter,
   EntityFilter,
@@ -18,7 +17,7 @@ import {
   is_filter,
   is_omit_filter,
 } from "./filter";
-import { is_observe } from "./observe";
+import { is_observe, Observe } from "./observe";
 
 /**
  * Create a query of given query parameters.
@@ -35,7 +34,7 @@ export function query<T extends QueryParams>(...params: T): Query<T> {
  *
  * @todo look in to why & fix it so we don't have to use `Omit`
  */
-type QueryParams = readonly (Omit<Filter, "predicate"> | Component)[];
+type QueryParams = readonly (Omit<Filter, "predicate"> | Component | Observe)[];
 
 type QueryIter<T extends QueryParams> = Iterable<QueryResult<T>>;
 
@@ -47,13 +46,15 @@ type UnwrapQueryParams<T extends QueryParams> = Tuple.Flatten<
       ? T[K] extends { [FilterType.Omit]: true }
         ? []
         : UnwrapQueryParams<T[K]["include"]>
+      : T[K] extends Observe
+      ? UnwrapQueryParamInstance<T[K]["include"]>
       : T[K] extends Type
-      ? T[K] extends IsTag<T[K]>
-        ? []
-        : InstanceType<T[K]>
+      ? UnwrapQueryParamInstance<T[K]>
       : never;
   }
 >;
+
+type UnwrapQueryParamInstance<T extends Type> = T extends IsTag<T> ? [] : InstanceType<T>;
 
 type FetchInfo = {
   info: ComponentInfo | "entity";
@@ -70,7 +71,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
   private readonly fetch_info: readonly FetchInfo[];
   private readonly entity_filters: readonly EntityFilter[];
   private readonly component_info: readonly ComponentInfo[];
-  private readonly components: (ComponentSparseSet | undefined)[];
+  private readonly components: (ComponentStorage | undefined)[];
   private readonly result_array: ComponentInstance[];
   private world: World | undefined;
 
@@ -88,7 +89,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
     this.fetch_info = params.flatMap((x) =>
       is_filter(x)
         ? x.include.map((y) => unpack_fetch_info(y, x))
-        : unpack_fetch_info(x as Component),
+        : unpack_fetch_info(x as Component | Observe),
     );
 
     // get entity_filters
@@ -189,11 +190,11 @@ class Query<T extends QueryParams> implements QueryIter<T> {
           continue;
         }
 
-        const [component, flags] = this.components[i]!.get_with_flags(entity);
-
-        if (component === undefined) {
+        if (!this.components[i]!.has(entity)) {
           continue root;
         }
+
+        const [component, flags] = this.components[i]!.get_with_flags(entity);
 
         if (
           fetch.filter &&
@@ -230,13 +231,14 @@ class Query<T extends QueryParams> implements QueryIter<T> {
 }
 
 function unpack_fetch_info(
-  component: Component,
+  fetch: Component | Observe,
   filter?: ComponentFilter | EntityFilter,
 ): FetchInfo {
-  const entity = component === Entity;
+  const component = is_observe(fetch) ? fetch.include : fetch;
+  const is_entity = component === Entity;
   return {
-    info: entity ? "entity" : get_component_info_or_register(component),
-    filter: filter,
-    observe: is_observe(component),
+    info: is_entity ? "entity" : get_component_info_or_register(component),
+    filter,
+    observe: is_observe(fetch),
   };
 }
