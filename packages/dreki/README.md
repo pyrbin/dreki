@@ -8,11 +8,24 @@ An **[Entity-Component System](https://github.com/SanderMertens/ecs-faq)** (ecs)
 
 [📝 Changelogs](CHANGELOG.md)
 
-## Example
+## 🚀 Install
 
-```typescript
+```ts
+npm i dreki
+```
+
+## 📜 Example
+
+```ts
 import { World, query } from "dreki";
 import { not } from "dreki/filters";
+
+class Dead {}
+
+class Position {
+  x: number = 0;
+  y: number = 0;
+}
 
 const alive = query(not(Dead), Position);
 
@@ -28,9 +41,17 @@ const world = World.build()
   .systems("my_custom_stage", alive_system)
   .done();
 
+const kill_entity = (entity: Entity) => {
+  world.add(entity, Dead);
+};
+
+const entity = world.spawn(Position);
+
 setInterval(() => {
   world.update();
 }, 1 / 60);
 ```
 
 ## 🎉 Getting started
+
+TODO
