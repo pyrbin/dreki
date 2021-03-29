@@ -2,7 +2,7 @@
 
 An **[Entity-Component System](https://github.com/SanderMertens/ecs-faq)** (ecs) library written in Typescript.
 
-> ### **⚠** <br>
+> ### **⚠ Warning** <br>
 >
 > The package is very much a _WIP_ and offers no guarantees regarding **stability** or **backwards compatibility**. The API's will likely change as I progress creating an actual game using the library.
 
@@ -41,11 +41,8 @@ const world = World.build()
   .systems("my_custom_stage", alive_system)
   .done();
 
-const kill_entity = (entity: Entity) => {
-  world.add(entity, Dead);
-};
-
 const entity = world.spawn(Position);
+const dead_entity = world.spawn(Position, Dead);
 
 setInterval(() => {
   world.update();
