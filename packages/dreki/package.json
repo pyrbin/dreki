@@ -15,7 +15,7 @@
   "typesVersions": {
     "*": {
       "filters": [
-        "out/query/filters"
+        "out/query/filters/mod.d.ts"
       ]
     }
   },
