@@ -1,5 +1,16 @@
 import { range } from "@dreki.land/shared";
-import { IsPlayer, Position, Scale, Tag } from "./utils/data";
+import {
+  DoublePoint,
+  IsPlayer,
+  Point,
+  Point2D,
+  Point3D,
+  Point4D,
+  Position,
+  Position1D,
+  Scale,
+  Tag,
+} from "./utils/data";
 import { Entity } from "../src/entity/mod";
 import { get_component_info_or_register } from "../src/component/register";
 import { added, changed, disabled, not, observe, removed } from "../src/query/filters/mod";
@@ -23,6 +34,7 @@ test("simple non-filter query", () => {
         called++;
       }
     })
+    .components(Position1D)
     .done();
 
   for (let i = 0; i < spawn_count; i++) {
@@ -67,6 +79,7 @@ test("changed filter", () => {
   const obs_positions = query(changed(Position), Scale);
   const world = World.build()
     .with({ capacity: 50 })
+    .components(Position1D)
     .systems(() => {
       for (const [pos, scale] of obs_positions) {
         called++;
@@ -221,4 +234,56 @@ test("entity parameter", () => {
 
   world.update();
   expect(called).toBe(ITER);
+});
+
+test("super component batch", () => {
+  const point3d_count = 500;
+  const double_point_count = 333;
+  const point4d_count = 1000;
+
+  const total_from_point2d = point4d_count + point3d_count;
+  const total_count = double_point_count + total_from_point2d;
+
+  const all_point4d = query(Point4D);
+  const all_point3d = query(Point3D, not(Point4D));
+  const all_point2d = query(Point2D);
+  const all_points = query(Point);
+
+  const world = World.build()
+    .systems(() => {
+      called = 0;
+      for (const [data] of all_point4d) {
+        expect(data).toBeInstanceOf(Point4D);
+        called++;
+      }
+      expect(called).toBe(point4d_count);
+      called = 0;
+      for (const [data] of all_point3d) {
+        expect(data).toBeInstanceOf(Point3D);
+        called++;
+      }
+      expect(called).toBe(point3d_count);
+      called = 0;
+      for (const [data] of all_point2d) {
+        expect(data instanceof Point4D || data instanceof Point3D).toBe(true);
+        called++;
+      }
+      expect(called).toBe(total_from_point2d);
+      called = 0;
+      for (const [data] of all_points) {
+        expect(data).toBeInstanceOf(Point);
+        called++;
+      }
+      expect(called).toBe(total_count);
+    })
+    .done();
+
+  world.batch(point4d_count, Point4D);
+  world.batch(point3d_count, Point3D);
+  world.batch(double_point_count, DoublePoint);
+
+  world.register(Point);
+  world.register(Point2D);
+
+  world.update();
 });

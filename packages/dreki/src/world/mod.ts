@@ -6,6 +6,7 @@ import {
   ComponentFlags,
   ComponentId,
   Components,
+  INVALID_COMPONENT_ID,
   ReadonlyComponents,
 } from "../component/mod";
 import { get_component_id, get_component_info_or_register } from "../component/register";
@@ -283,7 +284,7 @@ export class World {
    * @returns
    */
   register(component: Component) {
-    if (get_component_id(component) !== undefined) return false;
+    if (get_component_id(component) !== INVALID_COMPONENT_ID) return false;
     const info = get_component_info_or_register(component);
     return this.storage.get_or_create(info, this.capacity) !== undefined;
   }
