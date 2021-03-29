@@ -1,6 +1,6 @@
 # @dreki.land/shared
 
-## 0.0.1
+## 0.0.3
 
 ### Patch Changes
 
