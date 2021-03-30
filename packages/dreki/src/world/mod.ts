@@ -36,7 +36,8 @@ export type WorldOptions = {
 };
 
 /**
- * The world is the core of the ECS
+ * World stores & exposes operations on `entities`, `components` & their respective metadata.
+ * It also contains a `Scheduler` to schedule systems acting on the World.
  */
 export class World {
   readonly id: WorldId;
@@ -275,7 +276,7 @@ export class World {
   }
 
   /**
-   * Runs the `scheduler` which updates all stages & systems.
+   * Runs the `Scheduler` which updates all stages & systems.
    */
   update() {
     World.runtime.current_world = this;
@@ -307,7 +308,7 @@ export class World {
   }
 
   /**
-   * Register an `component` to the world. Returns true if successful or
+   * Register a `component` to the world. Returns true if successful or
    * false if the `component` has already been registered.
    * @param component
    * @returns
