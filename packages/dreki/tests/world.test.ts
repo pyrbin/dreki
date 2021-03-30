@@ -1,5 +1,5 @@
 import { World } from "../src/world/mod";
-import { Scale, Position, Time, Point, DoublePoint } from "./utils/data";
+import { Scale, Position, Time, Point, DoublePoint, IsPlayer } from "./utils/data";
 
 test("id generation", () => {
   const world = new World();
@@ -50,4 +50,25 @@ test("world increase capacity", () => {
   const new_entity2 = world.spawn(new Point(999));
   expect(world.get(new_entity2, Point)).toBeDefined();
   expect(world.get(new_entity2, Point).x).toBe(999);
+});
+
+test("singleton getter", () => {
+  const world = new World({ capacity: 5 });
+  const entity = world.spawn(Position, Scale);
+
+  const new_pos = new Position(20, 20);
+  const player_entity = world.spawn(new_pos, Scale, IsPlayer);
+
+  const player = world.single(IsPlayer);
+
+  expect(player.index).toBe(player_entity.index);
+  expect(world.get(player, Position)).toBe(new_pos);
+
+  world.add(entity, IsPlayer);
+  expect(() => world.single(IsPlayer)).toThrowError();
+
+  world.despawn(player);
+  world.despawn(entity);
+
+  expect(world.single(IsPlayer)).toBeUndefined();
 });
