@@ -36,7 +36,8 @@ export type WorldOptions = {
 };
 
 /**
- * The world is the core of the ECS
+ * World stores & exposes operations on `entities`, `components` & their respective metadata.
+ * It also contains a `Scheduler` to schedule systems acting on the World.
  */
 export class World {
   readonly id: WorldId;
@@ -152,6 +153,35 @@ export class World {
   }
 
   /**
+   * Retrieves a single `entity` that has given `component`. Enforces singleton pattern, will throw
+   * if the component storage contains more than 1 entity.
+   * @param component
+   * @returns
+   */
+  single<T extends Component>(component: T) {
+    const storage = this.storage.get(get_component_id(component));
+    if (storage.length > 1) {
+      throw new Error(`There exist more than 0 entity with component ${component.name}!`);
+    }
+    if (storage.length === 1) {
+      return storage.entity_slice().get(0);
+    }
+  }
+
+  /**
+   * Safe call to `World.single`. Will catch if any error is thrown & return undefined instead.
+   * @param component
+   * @returns
+   */
+  try_single<T extends Component>(component: T) {
+    try {
+      return this.single(component);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Enables a disabled `component` for a given `entity`
    * @param entity
    * @param component
@@ -246,7 +276,7 @@ export class World {
   }
 
   /**
-   * Runs the `scheduler` which updates all stages & systems.
+   * Runs the `Scheduler` which updates all stages & systems.
    */
   update() {
     World.runtime.current_world = this;
@@ -278,7 +308,7 @@ export class World {
   }
 
   /**
-   * Register an `component` to the world. Returns true if successful or
+   * Register a `component` to the world. Returns true if successful or
    * false if the `component` has already been registered.
    * @param component
    * @returns
