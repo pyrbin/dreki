@@ -14,7 +14,7 @@ export const bitflags = {
    * @returns
    */
   insert(bits: Flags, other: Flags) {
-    return (bits |= other);
+    return bits | other;
   },
 
   /**
@@ -24,7 +24,7 @@ export const bitflags = {
    * @returns
    */
   remove(bits: Flags, other: Flags) {
-    return (bits &= ~other);
+    return bits & ~other;
   },
 
   /**
