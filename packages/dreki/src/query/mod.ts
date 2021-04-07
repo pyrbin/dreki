@@ -190,15 +190,17 @@ class Query<T extends QueryParams> implements QueryIter<T> {
           continue;
         }
 
+        const storage = this.components[i]!;
+
         if (!this.components[i]!.has(entity)) {
           continue root;
         }
 
-        const [component, flags] = this.components[i]!.get_with_flags(entity);
+        const state = storage.get_with_state(entity);
 
         if (
           fetch.filter &&
-          !(fetch.filter as ComponentFilter).predicate(this.world!, entity, [component, flags])
+          !(fetch.filter as ComponentFilter).predicate(this.world!, entity, state)
         ) {
           continue root;
         }
@@ -210,7 +212,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
         this.result_array[this.result_index++] =
           fetch.observe === true
             ? (this.world?.storage.get_observed(entity, fetch.info) as ComponentInstance)
-            : component;
+            : state[0];
       }
 
       return this.result;

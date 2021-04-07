@@ -5,7 +5,8 @@ import {
   ComponentFlags,
   Component,
   ComponentTick,
-  is_tick_valid,
+  is_added,
+  is_changed,
 } from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { MAX_CHANGE_TICK_DELTA } from "../constants";
@@ -84,10 +85,10 @@ export class ComponentSparseSet implements ComponentStorage {
 
     if (this.phantoms.size > 0) {
       // Remove from phantom storages
-      for (const ph of this.phantoms.values()) {
-        const match_instance = value instanceof ph?.info.component;
+      for (const phantom of this.phantoms.values()) {
+        const match_instance = value instanceof phantom?.info.component;
         if (!match_instance) {
-          ph?.entities.remove(entity.index);
+          phantom?.entities.remove(entity.index);
         }
       }
     }
@@ -145,8 +146,8 @@ export class ComponentSparseSet implements ComponentStorage {
 
     if (this.phantoms.size > 0) {
       // Remove from phantom storages
-      for (const ph of this.phantoms.values()) {
-        ph?.entities.remove(entity.index);
+      for (const phantom of this.phantoms.values()) {
+        phantom?.entities.remove(entity.index);
       }
     }
 
@@ -215,8 +216,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   is_added(entity: Entity) {
-    const dense_index = this.sparse[entity.index];
-    return is_tick_valid(this.added[dense_index]);
+    return is_added(this.get_ticks(entity));
   }
 
   /**
@@ -226,8 +226,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   is_changed(entity: Entity) {
-    const dense_index = this.sparse[entity.index];
-    return is_tick_valid(this.changed[dense_index]);
+    return is_changed(this.get_ticks(entity));
   }
 
   /**
@@ -243,6 +242,16 @@ export class ComponentSparseSet implements ComponentStorage {
       this.added[dense_index],
       this.changed[dense_index],
     ] as const;
+  }
+
+  /**
+   * Get component change ticks for given `entity`.
+   * @param entity
+   * @returns
+   */
+  get_ticks(entity: Entity) {
+    const dense_index = this.sparse[entity.index];
+    return [this.added[dense_index], this.changed[dense_index]] as const;
   }
 
   /**

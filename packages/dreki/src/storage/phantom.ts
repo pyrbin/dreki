@@ -1,34 +1,39 @@
 import { SparseSet, slice_of } from "@dreki.land/collections";
-import { ComponentInstance, ComponentFlags, Component } from "../component/mod";
+import { ComponentInstance, ComponentFlags, ComponentTick } from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { Entity } from "../entity/mod";
-import { ComponentStorage } from "./components";
+import { ComponentStorage, ComponentState } from "./components";
 
 /**
  * Phantom component storage. Phantom storages doesn't store data (other than belonging entities) but
  * rather references another component storage.
  */
 export class PhantomComponentStorage implements ComponentStorage {
+  readonly info: ComponentInfo;
   readonly entities: SparseSet<number, Entity>;
-  readonly component_info: ComponentInfo;
-
-  reference: ComponentStorage;
+  readonly reference: ComponentStorage;
 
   constructor(info: ComponentInfo, storage: ComponentStorage) {
-    this.entities = new SparseSet(storage.capacity);
-    this.component_info = info;
+    this.info = info;
     this.reference = storage;
+    this.entities = new SparseSet(storage.capacity);
     this.change_reference(storage);
   }
 
   change_reference(storage: ComponentStorage) {
     storage.register_phantom(this);
+    //@ts-ignore
     this.reference = storage;
   }
 
-  insert(entity: Entity, value: ComponentInstance, flags: ComponentFlags): ComponentInstance {
+  insert(
+    entity: Entity,
+    value: ComponentInstance,
+    flags: ComponentFlags,
+    change_tick: ComponentTick,
+  ): ComponentInstance {
     this.entities.insert(entity.index, entity);
-    return this.reference.insert(entity, value, flags);
+    return this.reference.insert(entity, value, flags, change_tick);
   }
 
   remove(entity: Entity): boolean {
@@ -42,10 +47,10 @@ export class PhantomComponentStorage implements ComponentStorage {
       : ((undefined as unknown) as ComponentInstance);
   }
 
-  get_with_flags(entity: Entity): [ComponentInstance, ComponentFlags] {
-    return (this.entities.contains(entity.index)
-      ? this.reference.get_with_flags(entity)
-      : [undefined, undefined]) as [ComponentInstance, ComponentFlags];
+  get_with_state(entity: Entity) {
+    return this.entities.contains(entity.index)
+      ? this.reference.get_with_state(entity)
+      : (([] as unknown) as ComponentState);
   }
 
   set_flag(entity: Entity, fn: (flag: ComponentFlags) => ComponentFlags) {
@@ -53,26 +58,36 @@ export class PhantomComponentStorage implements ComponentStorage {
     this.reference.set_flag(entity, fn);
   }
 
+  set_added_tick(entity: Entity, changed_tick: number) {
+    this.reference.set_added_tick(entity, changed_tick);
+  }
+
+  set_changed_tick(entity: Entity, changed_tick: number) {
+    this.reference.set_changed_tick(entity, changed_tick);
+  }
+
+  is_added(entity: Entity) {
+    return this.reference.is_added(entity);
+  }
+
+  is_changed(entity: Entity) {
+    return this.reference.is_changed(entity);
+  }
+
+  get_ticks(entity: Entity) {
+    return this.reference.get_ticks(entity);
+  }
+
   has(entity: Entity): boolean {
     return this.entities.contains(entity.index);
   }
 
-  clear_flags() {
-    this.reference.clear_flags();
+  check_ticks(change_tick: number) {
+    this.reference.check_ticks(change_tick);
   }
 
   register_phantom(reference: PhantomComponentStorage) {
     this.reference.register_phantom(reference);
-  }
-
-  /**
-   * This doesn't do anything because phantom storages doesn't allocate any data.
-   * Access it's reference storage `PhantomComponentStorage.reference.realloc` instead.
-   * @param length
-   * @returns
-   */
-  realloc(length?: number): void {
-    return;
   }
 
   empty(): boolean {

@@ -48,6 +48,9 @@ export class World {
 
   readonly removed: SparseSet<ComponentId, Set<Entity>>;
 
+  change_tick: number = 1;
+  last_change_tick: number = 0;
+
   get capacity() {
     return this.entities.capacity;
   }
@@ -68,10 +71,13 @@ export class World {
 
     const capacity = Math.min(options?.capacity ?? DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY);
 
-    this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
-    this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
+    this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT, (entity, storage) => {
+      storage?.set_changed_tick(entity, this.change_tick);
+    });
+
     this.scheduler = new Scheduler();
     this.resources = new Resources();
+    this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
@@ -125,7 +131,7 @@ export class World {
       const info = get_component_info_or_register(type);
       this.storage
         .get_or_create(info, this.capacity)
-        .insert(entity, instance, ComponentFlags.Added);
+        .insert(entity, instance, ComponentFlags.None, this.change_tick);
     }
   }
 
@@ -280,15 +286,34 @@ export class World {
    */
   update() {
     World.runtime.current_world = this;
-    this.scheduler.update(this);
+    this.scheduler.run(this);
     this.clear_trackers();
   }
 
   /**
-   * Clears all component state tracker, such as "added", "changed", "removed".
+   * Increment world change tick & return the value.
+   * @returns
+   */
+  increment_change_tick() {
+    return (this.change_tick += 1);
+  }
+
+  /**
+   * Check & clamp component change ticks
+   */
+  check_change_ticks() {
+    this.storage.check_change_ticks(this.change_tick);
+  }
+
+  /**
+   * Clears all component state tracker.
    */
   clear_trackers() {
-    this.storage.clear_flags();
+    // increment world last_change tick.
+    this.last_change_tick = this.increment_change_tick();
+    World.runtime.last_change_tick = this.last_change_tick;
+
+    // clear removed trackers
     for (let i = 0; i < this.removed.length; i++) {
       this.removed.dense.raw[i].clear();
     }

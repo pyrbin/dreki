@@ -1,5 +1,4 @@
-import { bitflags } from "@dreki.land/shared";
-import { ComponentFlags } from "../../component/mod";
+import { is_changed } from "../../component/mod";
 import { impl_filter } from "../filter";
 
 /**
@@ -17,10 +16,8 @@ import { impl_filter } from "../filter";
  * }
  * // This query will only trigger because `observe` was used before
  * for (const [pos] of changed) {
- *   console.log(`Position changed!`);
+ *   print(`Position changed!`);
  * }
  * ```
  */
-export const changed = impl_filter((world, entity, [, flag]) => {
-  return bitflags.contains(flag, ComponentFlags.Changed);
-});
+export const changed = impl_filter((world, entity, [, , ...ticks]) => is_changed(ticks));
