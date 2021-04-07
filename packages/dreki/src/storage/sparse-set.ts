@@ -28,14 +28,13 @@ export class ComponentSparseSet implements ComponentStorage {
   readonly changed: Uint32Array;
 
   /**
-   * Phantom storages that references this storage are stored here
-   * so it can be notified if a component of it's component type has been removed.
+   * Phantom storages that references this storage are stored here so it can
+   * be notified if a component of it's component type has been removed.
    */
   readonly phantoms: Map<Component, PhantomComponentStorage>;
 
   /**
    * Registeres a phantom storage.
-   * @param component
    * @param reference
    */
   register_phantom(reference: PhantomComponentStorage) {
