@@ -1,3 +1,4 @@
+import { observe } from "../src/query/observe";
 import { World } from "../src/world/mod";
 import { Scale, Position, Time, Point, DoublePoint, IsPlayer } from "./utils/data";
 

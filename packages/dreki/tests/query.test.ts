@@ -12,7 +12,6 @@ import {
   Tag,
 } from "./utils/data";
 import { Entity } from "../src/entity/mod";
-import { get_component_info_or_register } from "../src/component/register";
 import { added, changed, disabled, not, observe, removed } from "../src/query/filters/mod";
 import { World, query } from "../src/mod";
 
@@ -75,32 +74,72 @@ test("not filter", () => {
   expect(called).toBe(non_pos * count);
 });
 
-test("changed filter", () => {
-  const obs_positions = query(changed(Position), Scale);
+test("changed filter same system", () => {
+  const ITER = 1000;
+  const react = query(changed(Position), Scale);
+  const mutate = query(observe(Position));
+  let i = 0;
   const world = World.build()
     .with({ capacity: 50 })
     .components(Position1D)
     .systems(() => {
-      for (const [pos, scale] of obs_positions) {
+      for (const [pos, scale] of react) {
         called++;
-        pos.x += scale.a;
       }
+      for (const [pos] of mutate) {
+        if (i % 2 === 0) {
+          pos.x *= 2;
+        }
+      }
+      i++;
     })
     .done();
-  const entt = world.spawn(new Position(20, 20), new Scale(100, 100));
-  world.update();
-  const obs = world.storage.get_observed(entt, get_component_info_or_register(Position));
-  obs.x += 20;
-  world.update();
-  obs.x = obs.x;
-  world.update();
 
-  expect(obs.x).toBe(140);
-  expect(called).toBe(1);
+  world.spawn(new Position(20, 20), new Scale(100, 100));
+  for (const _ of range(ITER)) {
+    world.update();
+  }
+
+  expect(called).toBe(Math.ceil(ITER / 2));
+});
+
+test("changed filter seperate systems", () => {
+  const ITER = 1000;
+  const react = query(changed(Position), Scale);
+  const mutate = query(observe(Position));
+  let i = 0;
+  const world = World.build()
+    .with({ capacity: 50 })
+    .components(Position1D)
+    .systems(
+      () => {
+        for (const [pos, scale] of react) {
+          called++;
+        }
+      },
+      () => {
+        for (const [pos] of mutate) {
+          if (i % 2 === 0) {
+            pos.x *= 2;
+          }
+        }
+        i++;
+      },
+    )
+    .done();
+
+  world.spawn(new Position(20, 20), new Scale(100, 100));
+  for (const _ of range(ITER)) {
+    world.update();
+  }
+
+  expect(called).toBe(Math.ceil(ITER / 2));
 });
 
 test("added filter", () => {
   const added_pos = query(added(Position), Scale);
+  const added_scale = query(added(Scale));
+
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
@@ -108,17 +147,21 @@ test("added filter", () => {
         called++;
         expect(data.length).toBe(2);
       }
+      for (const data of added_scale) {
+        called += 200;
+        expect(data.length).toBe(1);
+      }
     })
     .done();
-  const entt = world.spawn();
+  const entity = world.spawn();
   world.update();
-  world.add(entt, Scale);
+  world.add(entity, Scale);
   world.update();
-  world.add(entt, Position);
+  world.add(entity, Position);
   world.update();
   world.update();
 
-  expect(called).toBe(1);
+  expect(called).toBe(201);
 });
 
 test("removed filter", () => {
@@ -145,7 +188,7 @@ test("removed filter", () => {
 test("disabled filter", () => {
   const added_pos = query(disabled(Position), Scale);
   const world = World.build()
-    .with({ capacity: 50 })
+    .with({ capacity: 1 })
     .systems(() => {
       for (const data of added_pos) {
         expect(data.length).toBe(2);
@@ -166,26 +209,36 @@ test("disabled filter", () => {
 });
 
 test("observed selection", () => {
+  const length = 10;
   const changed_query = query(changed(Position), Scale);
   const observed_query = query(observe(Position), Scale);
+
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
-      for (const data of changed_query) {
-        called += 25;
+      for (const [observed_pos] of observed_query) {
+        observed_pos.x += 1;
       }
-      for (const [obs] of observed_query) {
-        obs.x += 2;
+      for (const data of changed_query) {
+        called++;
+      }
+      for (const [observed_pos] of observed_query) {
+        observed_pos.x += 1;
       }
       for (const data of changed_query) {
         called++;
       }
     })
     .done();
-  world.spawn(Position, Scale);
-  world.update();
-  world.update();
-  expect(called).toBe(2);
+
+  const entity = world.spawn(Position, Scale);
+
+  for (const i of range(length)) {
+    world.update();
+  }
+
+  expect(world.get(entity, Position).x).toBe(length * 2);
+  expect(called).toBe(length * 2 - 2);
 });
 
 test("tag component query", () => {
