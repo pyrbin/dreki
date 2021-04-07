@@ -47,6 +47,13 @@ export class Resources {
    * @returns
    */
   dispose<T extends Resource>(resource: T) {
-    return this.data.delete(resource);
+    const value = this.data.get(resource);
+
+    if (value) {
+      value?.dispose?.();
+      return this.data.delete(resource);
+    }
+
+    return false;
   }
 }
