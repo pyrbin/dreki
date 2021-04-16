@@ -1,6 +1,6 @@
 {
   "name": "@dreki.land/collections",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Common data-structures used within dreki",
   "license": "MIT",
   "private": false,

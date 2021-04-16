@@ -1,6 +1,6 @@
 {
   "name": "dreki",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "🐉 An Entity-Component System library written in Typescript",
   "license": "MIT",
   "private": false,
