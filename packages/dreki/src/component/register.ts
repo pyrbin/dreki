@@ -63,7 +63,7 @@ export function register(...components: Components) {
 
   for (let i = 0; i < components.length; i++) {
     const component = components[i];
-    const id = ++rt.component_counter;
+    const id = ++rt.component_id_counter;
     const info: ComponentInfo = {
       id,
       mask: 1 << id,

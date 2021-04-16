@@ -4,7 +4,7 @@ import type { Components } from "../component/mod";
 import { DEFAULT_ENTITY_CAPACITY } from "../constants";
 import { StageCreationParams, Stages } from "../scheduler/mod";
 import { Stage, StageLabel } from "../scheduler/stage";
-import type { System } from "../scheduler/system";
+import { System, SystemFunc } from "../scheduler/system";
 import type { Resource, ResourceInstance } from "./resources";
 
 /**
@@ -12,7 +12,7 @@ import type { Resource, ResourceInstance } from "./resources";
  */
 export class WorldBuilder {
   private stages: StageCreationParams[];
-  private world_systems: Map<string, System[]>;
+  private world_systems: Map<string, SystemFunc[]>;
   private world_resources: ResourceInstance[];
   private world_components: Components;
   private options: WorldOptions;
@@ -79,12 +79,11 @@ export class WorldBuilder {
    * ```
    * @param params Systems to insert. The first element in the array can be used to specify stage.
    */
-  systems(...params: [StageLabel, ...System[]] | System[]) {
+  systems(...params: [StageLabel, ...SystemFunc[]] | SystemFunc[]) {
     const with_given_stage = typeof params[0] === "string";
 
-    const stage: StageLabel = (with_given_stage ? params[0] : Stages.Update) as StageLabel;
-
-    const systems: System[] = (with_given_stage ? params.slice(1) : params) as System[];
+    const stage = (with_given_stage ? params[0] : Stages.Update) as StageLabel;
+    const systems = (with_given_stage ? params.slice(1) : params) as SystemFunc[];
 
     get_or_insert(this.world_systems, stage, () => []).push(...systems);
     return this;
@@ -120,7 +119,7 @@ export class WorldBuilder {
     const world = new World(this.options);
 
     // Resolve the order of the stages
-    world.scheduler.resolve(this.stages);
+    world.scheduler.resolve_stages(this.stages);
 
     // Add systems that have been added outside stage creation
     for (const [label, systems] of this.world_systems.entries()) {

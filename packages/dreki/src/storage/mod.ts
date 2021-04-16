@@ -1,7 +1,6 @@
-import { slice_of, Slice, SparseSet } from "@dreki.land/collections";
-import { bitflags } from "@dreki.land/shared";
-import { ComponentFlags, ComponentId } from "../component/mod";
-import { ComponentSparseSet, ComponentStorage, EntitySlice } from "./components";
+import { SparseSet } from "@dreki.land/collections";
+import { ComponentId } from "../component/mod";
+import { ComponentStorage, EntitySlice } from "./components";
 import {
   ComponentInfo,
   get_component_id,
@@ -10,26 +9,20 @@ import {
 import { ProxyObserver } from "./proxy";
 import type { Entity } from "../entity/mod";
 import { PhantomComponentStorage } from "./phantom";
+import { ComponentSparseSet } from "./sparse-set";
 
 export class Storage {
-  readonly observer: ProxyObserver;
   readonly sets: SparseSet<ComponentId, ComponentStorage>;
+  readonly observer: ProxyObserver;
 
-  constructor(initial_component_count: number) {
+  constructor(
+    initial_component_count: number,
+    changed_callback?: (entity: Entity, storage: ComponentStorage) => unknown,
+  ) {
     this.sets = new SparseSet(initial_component_count);
-    this.observer = new ProxyObserver((entity, component) => {
-      this.sets
-        .get(component)
-        ?.set_flag(entity, (flags) => bitflags.insert(flags, ComponentFlags.Changed));
-    });
-  }
-
-  get_comp(entity: Entity, id: ComponentId) {
-    return this.sets.get_unchecked(id).get(entity);
-  }
-
-  get_comp_with_flags(entity: Entity, id: ComponentId) {
-    return this.sets.get_unchecked(id).get_with_flags(entity);
+    this.observer = new ProxyObserver((entity, component) =>
+      changed_callback?.(entity, this.sets.get(component)!),
+    );
   }
 
   get(id: ComponentId) {
@@ -73,9 +66,9 @@ export class Storage {
    * @param new_storage
    */
   private resolve_storage_types_with_inserted(new_storage: ComponentStorage) {
-    const info = new_storage.component_info;
+    const info = new_storage.info;
     for (const other of this.sets) {
-      const other_info = other.component_info;
+      const other_info = other.info;
       if (!other_info?.super || other_info.super !== info.component) continue;
       if (other instanceof PhantomComponentStorage) {
         // If it's a phantom storage, migrate existing entities & set reference
@@ -90,7 +83,9 @@ export class Storage {
         const phantom_storage = new PhantomComponentStorage(other_info, new_storage);
         for (const entity of other.entities) {
           // Migrate existing components & entities.
-          phantom_storage.insert(entity, ...other.get_with_flags(entity));
+          const result = other.get_with_state(entity);
+          phantom_storage.insert(entity, result[0], result[1], result[2]);
+          phantom_storage.set_changed_tick(entity, result[3]);
         }
         for (const [, ph] of other.phantoms) {
           // Register previous phantom storages.
@@ -103,12 +98,22 @@ export class Storage {
   }
 
   /**
+   * Check & clamp component change ticks with given `change_tick`
+   * @param change_tick
+   */
+  check_change_ticks(change_tick: number) {
+    for (let i = 0; i < this.sets.dense.length; i++) {
+      this.sets.dense.raw[i].check_ticks(change_tick);
+    }
+  }
+
+  /**
    * Reallocate each storage to given `length`.
    * @param length
    */
   realloc(length: number) {
     for (let i = 0; i < this.sets.dense.length; i++) {
-      this.sets.dense.raw[i].realloc(length);
+      this.sets.dense.raw[i].realloc?.(length);
     }
   }
 
@@ -131,22 +136,7 @@ export class Storage {
         set = current;
       }
     }
-
-    if (set === undefined) {
-      return undefined;
-    }
-
-    return set.entity_slice();
-  }
-
-  /**
-   * Clears all component flags for every component storage.
-   * Won't clear `ComponentFlags.Disabled` flag.
-   */
-  clear_flags() {
-    for (let i = 0; i < this.sets.dense.length; i++) {
-      this.sets.dense.raw[i].clear_flags();
-    }
+    return set?.entity_slice() ?? undefined;
   }
 }
 

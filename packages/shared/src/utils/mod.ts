@@ -67,3 +67,15 @@ export function range(start: number, end?: number, step = 1): Iterable<number> {
     }),
   };
 }
+
+/**
+ * Create an iterable of given length & with given return values.
+ * @param length
+ * @param fn
+ * @returns
+ */
+export function iterable<T = unknown>(length: number, fn: (i: number) => T): Iterable<T> {
+  return (function* () {
+    for (const i of range(0, length)) yield fn(i);
+  })();
+}
