@@ -2,6 +2,7 @@ import { has_own_property, record } from "@dreki.land/shared";
 import type { Entity } from "../entity/mod";
 import type { World } from "../mod";
 import type { Component, ComponentFlags, ComponentInstance, Components } from "../component/mod";
+import type { ComponentState } from "../storage/components";
 
 export enum FilterType {
   /**
@@ -84,4 +85,4 @@ type FilterParams<T extends readonly FilterType[] = []> = {
   [K in T[number]]: true;
 } extends { [FilterType.Entity]: true }
   ? [world: World, entity: Entity, type: Component]
-  : [world: World, entity: Entity, comp_with_flags: [ComponentInstance, ComponentFlags]];
+  : [world: World, entity: Entity, comp_with_state: ComponentState];

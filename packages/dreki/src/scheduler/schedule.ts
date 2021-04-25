@@ -1,9 +1,9 @@
 import { insert_at } from "@dreki.land/shared";
 import type { World } from "../mod";
-import type { StageLabel, Stage, Updateable } from "./stage";
-import type { System } from "./system";
+import type { StageLabel, Stage, Runnable } from "./stage";
+import type { System, SystemFunc } from "./system";
 
-export class Schedule implements Updateable {
+export class Schedule implements Runnable {
   readonly stages: Map<StageLabel, Stage>;
   readonly ordered: [StageLabel, Stage][];
 
@@ -15,9 +15,9 @@ export class Schedule implements Updateable {
     this.ordered.push([name, group]);
   }
 
-  update(world: World) {
+  run(world: World) {
     for (let i = 0; i < this.ordered.length; i++) {
-      this.ordered[i][1].update(world);
+      this.ordered[i][1].run(world);
     }
   }
 
@@ -30,12 +30,6 @@ export class Schedule implements Updateable {
     };
   }
 
-  insert_systems(target: StageLabel, systems: System[]) {
-    if (!this.stages.has(target)) throw new Error(`Target group ${target} doesn't exist`);
-
-    this.stages.get(target)?.systems.push(...systems);
-  }
-
   add_stage_after(target: StageLabel, label: StageLabel, stage: Stage) {
     this.add_stage_with_offset(target, 1, label, stage);
   }
@@ -44,15 +38,27 @@ export class Schedule implements Updateable {
     this.add_stage_with_offset(target, 0, label, stage);
   }
 
+  insert_systems(target: StageLabel, systems: SystemFunc[]) {
+    if (!this.stages.has(target)) {
+      throw new Error(`Target group ${target} doesn't exist`);
+    }
+
+    this.stages.get(target)?.add_systems(...systems);
+  }
+
   private add_stage_with_offset(
     target: StageLabel,
     offset: number,
     label: StageLabel,
     group: Stage,
   ) {
-    if (!this.stages.has(target)) throw new Error(`Target group ${target} doesn't exist`);
+    if (!this.stages.has(target)) {
+      throw new Error(`Target group ${target} doesn't exist`);
+    }
 
-    if (this.stages.has(label)) throw new Error(`A group with label ${label} already exist!`);
+    if (this.stages.has(label)) {
+      throw new Error(`A group with label ${label} already exist!`);
+    }
 
     const target_index = this.ordered.findIndex((x) => x[0] === target);
 

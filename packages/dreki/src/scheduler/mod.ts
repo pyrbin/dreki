@@ -1,6 +1,6 @@
 import type { World } from "../mod";
 import { Schedule } from "./schedule";
-import { Stage, Updateable } from "./stage";
+import { Stage, Runnable } from "./stage";
 
 export enum Stages {
   Update = "update",
@@ -11,18 +11,18 @@ export type StageCreationParams = {
   params: Parameters<Schedule["add_stage_before"]>;
 };
 
-export class Scheduler implements Updateable {
+export class Scheduler implements Runnable {
   readonly schedule: Schedule;
 
   constructor() {
     this.schedule = new Schedule([Stages.Update, new Stage()]);
   }
 
-  update(world: World) {
-    this.schedule.update(world);
+  run(world: World) {
+    this.schedule.run(world);
   }
 
-  resolve(params: StageCreationParams[]) {
+  resolve_stages(params: StageCreationParams[]) {
     const input = params;
     let i = -1;
     while (input.length > 0) {

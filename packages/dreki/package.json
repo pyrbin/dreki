@@ -1,6 +1,7 @@
 {
   "name": "dreki",
-  "version": "0.0.0",
+  "version": "0.0.4",
+  "description": "🐉 An Entity-Component System library written in Typescript",
   "license": "MIT",
   "private": false,
   "type": "module",
@@ -14,7 +15,7 @@
   "typesVersions": {
     "*": {
       "filters": [
-        "out/query/filters"
+        "out/query/filters/mod.d.ts"
       ]
     }
   },

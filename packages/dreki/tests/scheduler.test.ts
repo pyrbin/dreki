@@ -35,7 +35,7 @@ test("execution order", () => {
   const last_update_stage = new Stage(last_update);
 
   const scheduler = new Scheduler();
-  scheduler.resolve([
+  scheduler.resolve_stages([
     {
       order: "after",
       params: ["post_update_stage", "last_update_stage", last_update_stage],
@@ -51,5 +51,5 @@ test("execution order", () => {
     { order: "before", params: ["pre_update_stage", "init", init_stage] },
   ]);
   scheduler.schedule.insert_systems("update", [update]);
-  scheduler.update(new World());
+  scheduler.run(new World());
 });

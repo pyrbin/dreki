@@ -4,12 +4,8 @@ import { Stages } from "../src/scheduler/mod";
 import { Stage } from "../src/scheduler/stage";
 import { Position, Scale, Time } from "./utils/data";
 
-const test_system1 = () => {
-  console.log("test_system1 :)");
-};
-const test_system2 = () => {
-  console.log("test_system2 :)");
-};
+const test_system1 = () => {};
+const test_system2 = () => {};
 
 test("throws if non-existant stage", () => {
   expect(() =>
@@ -26,8 +22,8 @@ test("pre-insert systems to a stage", () => {
     .stage_after(Stages.Update, "post_update", new Stage(test_system1))
     .done();
   const systems = world.scheduler.schedule.stages.get("post_update")!.systems;
-  expect(systems[0]).toBe(test_system1);
-  expect(systems[1]).toBe(test_system2);
+  expect(systems[0].func).toBe(test_system1);
+  expect(systems[1].func).toBe(test_system2);
 });
 
 test("register components", () => {
@@ -41,11 +37,4 @@ test("register components", () => {
 test("add resources", () => {
   const world = World.build().resources(new Time(256)).done();
   expect(world.resource(Time).dt).toBe(256);
-});
-
-test("test example", () => {
-  const wrld = World.build()
-    .stage_after("update", "my-stage", new Stage(() => "im cool system"))
-    .resources(new Time(0.016667))
-    .done();
 });

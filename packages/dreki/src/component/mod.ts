@@ -1,18 +1,14 @@
 import type { Type, record, ExcludeMethods } from "@dreki.land/shared";
 import { Entity } from "../entity/mod";
+import { World } from "../mod";
+
+export const INVALID_COMPONENT_ID = -1;
 
 export type ComponentId = number;
 export type ComponentMask = number;
 
-/**
- * ComponentFlags
- */
-export enum ComponentFlags {
-  Empty = 0,
-  Added = 1 << 1,
-  Changed = 1 << 2,
-  Disabled = 1 << 3,
-}
+export * from "./flags";
+export * from "./ticks";
 
 /**
  * Type-guard if component type is a tag.

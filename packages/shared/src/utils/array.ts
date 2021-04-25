@@ -1,5 +1,6 @@
 import { use_allocator } from "../mod";
-import type { Allocator } from "../types/mod";
+import type { Allocator, TypedArray } from "../types/mod";
+import { iterable } from "./mod";
 
 /**
  * Allocates an array of size with provided allocator object
@@ -19,7 +20,7 @@ export const array_of = <T extends unknown>(size: number, allocator: Allocator<T
  * @param i
  * @param j
  */
-export const swap = (array: Array<unknown>, i: number, j: number) => {
+export const swap = (array: Array<unknown> | TypedArray, i: number, j: number) => {
   [array[i], array[j]] = [array[j], array[i]];
 };
 

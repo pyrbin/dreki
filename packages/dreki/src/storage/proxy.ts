@@ -1,14 +1,8 @@
-import type { Component, ComponentId } from "../component/mod";
+import type { ComponentId } from "../component/mod";
 import { SYMBOL_PREFIX } from "../constants";
 import type { Entity } from "../entity/mod";
 
-const IS_PROXY_TYPE: unique symbol = Symbol(SYMBOL_PREFIX + "is_proxy");
-
-export interface ProxyType {
-  [IS_PROXY_TYPE]?: boolean;
-}
-
-type Proxy = InstanceType<typeof Proxy> & ProxyType;
+type Proxy = InstanceType<typeof Proxy>;
 type Target = Record<PropertyKey, unknown>;
 
 const isValidProxyTarget = (obj: unknown) =>
@@ -28,7 +22,7 @@ export class ProxyObserver {
    * @param callback
    */
   constructor(private readonly callback: ProxyCallback) {
-    this.proxies = new WeakMap();
+    this.proxies = new Map();
   }
 
   /**
@@ -39,7 +33,7 @@ export class ProxyObserver {
    * @param component
    * @returns
    */
-  public track<T extends Target>(target: T, entity: Entity, id: ComponentId): T | (T & ProxyType) {
+  public track<T extends Target>(target: T, entity: Entity, id: ComponentId): T {
     const { proxies } = this;
     const track = this.track.bind(this);
     const callback = this.callback.bind(this);
@@ -72,10 +66,9 @@ export class ProxyObserver {
       },
     };
 
-    proxy = new Proxy(target, handlers) as Proxy;
-    proxy[IS_PROXY_TYPE] = true;
-
+    proxy = new Proxy(target, handlers);
     proxies.set(target, proxy);
-    return (proxy as unknown) as T;
+
+    return proxy as T;
   }
 }

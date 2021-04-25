@@ -6,6 +6,7 @@ import {
   ComponentFlags,
   ComponentId,
   Components,
+  INVALID_COMPONENT_ID,
   ReadonlyComponents,
 } from "../component/mod";
 import { get_component_id, get_component_info_or_register } from "../component/register";
@@ -35,7 +36,8 @@ export type WorldOptions = {
 };
 
 /**
- * The world is the core of the ECS
+ * World stores & exposes operations on `entities`, `components` & their respective metadata.
+ * It also contains a `Scheduler` to schedule systems acting on the World.
  */
 export class World {
   readonly id: WorldId;
@@ -45,6 +47,9 @@ export class World {
   readonly scheduler: Scheduler;
 
   readonly removed: SparseSet<ComponentId, Set<Entity>>;
+
+  change_tick: number = 1;
+  last_change_tick: number = 0;
 
   get capacity() {
     return this.entities.capacity;
@@ -66,10 +71,13 @@ export class World {
 
     const capacity = Math.min(options?.capacity ?? DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY);
 
-    this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
-    this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
+    this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT, (entity, storage) => {
+      storage?.set_changed_tick(entity, this.change_tick);
+    });
+
     this.scheduler = new Scheduler();
     this.resources = new Resources();
+    this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
@@ -123,7 +131,7 @@ export class World {
       const info = get_component_info_or_register(type);
       this.storage
         .get_or_create(info, this.capacity)
-        .insert(entity, instance, ComponentFlags.Added);
+        .insert(entity, instance, ComponentFlags.None, this.change_tick);
     }
   }
 
@@ -148,6 +156,35 @@ export class World {
    */
   get<T extends Component>(entity: Entity, component: T) {
     return this.storage.get(get_component_id(component))?.get(entity) as InstanceType<T>;
+  }
+
+  /**
+   * Retrieves a single `entity` that has given `component`. Enforces singleton pattern, will throw
+   * if the component storage contains more than 1 entity.
+   * @param component
+   * @returns
+   */
+  single<T extends Component>(component: T) {
+    const storage = this.storage.get(get_component_id(component));
+    if (storage.length > 1) {
+      throw new Error(`There exist more than 0 entity with component ${component.name}!`);
+    }
+    if (storage.length === 1) {
+      return storage.entity_slice().get(0);
+    }
+  }
+
+  /**
+   * Safe call to `World.single`. Will catch if any error is thrown & return undefined instead.
+   * @param component
+   * @returns
+   */
+  try_single<T extends Component>(component: T) {
+    try {
+      return this.single(component);
+    } catch {
+      return undefined;
+    }
   }
 
   /**
@@ -245,19 +282,38 @@ export class World {
   }
 
   /**
-   * Runs the `scheduler` which updates all stages & systems.
+   * Runs the `Scheduler` which updates all stages & systems.
    */
   update() {
     World.runtime.current_world = this;
-    this.scheduler.update(this);
+    this.scheduler.run(this);
     this.clear_trackers();
   }
 
   /**
-   * Clears all component state tracker, such as "added", "changed", "removed".
+   * Increment world change tick & return the value.
+   * @returns
+   */
+  increment_change_tick() {
+    return (this.change_tick += 1);
+  }
+
+  /**
+   * Check & clamp component change ticks
+   */
+  check_change_ticks() {
+    this.storage.check_change_ticks(this.change_tick);
+  }
+
+  /**
+   * Clears all component state tracker.
    */
   clear_trackers() {
-    this.storage.clear_flags();
+    // increment world last_change tick.
+    this.last_change_tick = this.increment_change_tick();
+    World.runtime.last_change_tick = this.last_change_tick;
+
+    // clear removed trackers
     for (let i = 0; i < this.removed.length; i++) {
       this.removed.dense.raw[i].clear();
     }
@@ -277,13 +333,13 @@ export class World {
   }
 
   /**
-   * Register an `component` to the world. Returns true if successful or
+   * Register a `component` to the world. Returns true if successful or
    * false if the `component` has already been registered.
    * @param component
    * @returns
    */
   register(component: Component) {
-    if (get_component_id(component) !== undefined) return false;
+    if (get_component_id(component) !== INVALID_COMPONENT_ID) return false;
     const info = get_component_info_or_register(component);
     return this.storage.get_or_create(info, this.capacity) !== undefined;
   }

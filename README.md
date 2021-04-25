@@ -9,9 +9,10 @@ An **[Entity-Component System](https://github.com/SanderMertens/ecs-faq)** (ecs)
 
 ## 🗺 Overview
 
-The main goal of the library is to offer a **minimal**, **intuitive** & **modern** ecs with good performance.
+Dreki aims to offer a **minimal**, **intuitive** & **modern** ecs with good-enough performance.
+The **main focus** is not to offer the fastest ecs, but rather a library that is easy to work with & integrate with existing game-related web frameworks (eg. [three.js](https://threejs.org/), [babylon.js](https://www.babylonjs.com/) etc.).
 
-The API is greatly inspired by **[bevy-ecs](https://github.com/bevyengine/bevy)**.
+The API & many design choices is greatly inspired by **[bevy-ecs](https://github.com/bevyengine/bevy)**.
 
 ## 📚 Docs
 
@@ -30,7 +31,7 @@ _TODO_
 
 See [README@dreki](packages/dreki/) for more details.
 
-## 👷‍♂️ Developing
+## 👷‍♂️ Development
 
 1. Install [pnpm](https://pnpm.js.org/en/).
 

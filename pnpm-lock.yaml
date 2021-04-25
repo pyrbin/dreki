@@ -21,7 +21,7 @@ importers:
       dreki: link:../../packages/dreki
     devDependencies:
       '@sveltejs/adapter-node': 1.0.0-next.10
-      '@sveltejs/kit': 1.0.0-next.58_svelte@3.35.0+vite@2.1.2
+      '@sveltejs/kit': 1.0.0-next.61_svelte@3.35.0+vite@2.1.2
       svelte: 3.35.0
       svelte-preprocess: 4.6.9_svelte@3.35.0+typescript@4.2.3
       tslib: 2.1.0
@@ -963,7 +963,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-v62a9nQguK53ldwBp4FizvwW1Kh2wOZBjJKGlnZFhO9e1Z/LoIqR9LH5dVHz9d5K19or5ap3hRdS91WkkDgu4w==
-  /@sveltejs/kit/1.0.0-next.58_svelte@3.35.0+vite@2.1.2:
+  /@sveltejs/kit/1.0.0-next.61_svelte@3.35.0+vite@2.1.2:
     dependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.5_svelte@3.35.0+vite@2.1.2
       cheap-watch: 1.0.3
@@ -976,7 +976,7 @@ packages:
       svelte: ^3.32.1
       vite: ^2.1.0
     resolution:
-      integrity: sha512-Ta4VY1Wxc533+hwnPwEVMgMn43L1lwafTLZHksXO3rpnl/+IcXV1v6j4cTTkQiqEslU4wMZyxIpzWzZGQAypPg==
+      integrity: sha512-AesfUYrilDRgbx/qnzGdAk0QyMxzh06epj0X85/Vh0hkF9FJrRz5eWmlx7V/TzsAFE4H+1vUCuRtHHh8A/GyRw==
   /@sveltejs/vite-plugin-svelte/1.0.0-next.5_svelte@3.35.0+vite@2.1.2:
     dependencies:
       '@rollup/pluginutils': 4.1.0

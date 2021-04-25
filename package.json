@@ -1,5 +1,6 @@
 {
   "name": "dreki",
+  "description": "🐉 An Entity-Component System library written in Typescript",
   "scripts": {
     "build": "pnpm build --filter=\"@dreki.land/*\" --filter=\"dreki\"",
     "lint": "pnpm check-format",

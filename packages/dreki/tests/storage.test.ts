@@ -13,12 +13,12 @@ test("insert / remove", () => {
   const pos = new Position();
   pos.x = 2000;
 
-  set.insert(entity, pos, ComponentFlags.Empty);
+  set.insert(entity, pos, ComponentFlags.None, 0);
 
-  expect(set.len).toBe(1);
+  expect(set.length).toBe(1);
   expect(set.remove(entity)).toBe(true);
   expect(set.get(entity)).toBe(undefined);
-  expect(set.len).toBe(0);
+  expect(set.length).toBe(0);
   expect(set.remove(entity)).toBe(false);
 });
 
@@ -35,42 +35,10 @@ test("component disabled flag", () => {
   const info = get_info_helper();
   const stg = storage.get_or_create(info, 24);
   const entt = new Entity(0, 0);
-  stg.insert(entt, new Position(), ComponentFlags.Empty);
-  storage
-    .get(info.id)
-    .set_flag(entt, (flag) =>
-      bitflags.insert(
-        flag,
-        ComponentFlags.Disabled | ComponentFlags.Added | ComponentFlags.Changed,
-      ),
-    );
-  let [comp, flags] = storage.get(info.id).get_with_flags(entt);
+  stg.insert(entt, new Position(), ComponentFlags.None, 0);
+  storage.get(info.id).set_flag(entt, (flag) => bitflags.insert(flag, ComponentFlags.Disabled));
+  let [comp, flags] = storage.get(info.id).get_with_state(entt);
   expect(bitflags.contains(flags, ComponentFlags.Disabled)).toBe(true);
-  storage.clear_flags();
-  [comp, flags] = storage.get(info.id).get_with_flags(entt);
-  expect(bitflags.contains(flags, ComponentFlags.Disabled)).toBe(true);
-  expect(bitflags.contains(flags, ComponentFlags.Added | ComponentFlags.Changed)).toBe(false);
-});
-
-test("proxy component changed flags", () => {
-  const storage = new Storage(5);
-  const info = get_info_helper();
-  const stg = storage.get_or_create(info, 24);
-  const entt = new Entity(0, 0);
-  stg.insert(entt, new Position(), ComponentFlags.Empty);
-  const pos = storage.get_observed(entt, info) as Position;
-  pos.x = 200;
-  let [comp, flags] = storage.get(info.id).get_with_flags(entt);
-  expect(bitflags.contains(flags, ComponentFlags.Changed)).toBe(true);
-  storage.clear_flags();
-  // test modify with same value
-  // should return false
-  pos.x = 200;
-  [comp, flags] = storage.get(info.id).get_with_flags(entt);
-  expect(bitflags.contains(flags, ComponentFlags.Changed)).toBe(false);
-  pos.x = 125125;
-  [comp, flags] = storage.get(info.id).get_with_flags(entt);
-  expect(bitflags.contains(flags, ComponentFlags.Changed)).toBe(true);
 });
 
 test("grow when at capacity", () => {
