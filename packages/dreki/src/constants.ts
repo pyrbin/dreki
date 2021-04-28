@@ -13,6 +13,5 @@ export const MAX_CHANGE_TICK_DELTA = (u32.MAX / 4) * 3;
  * symbols
  */
 export const SYMBOL_PREFIX = `$$__dreki__`;
-export const RUNTIME_GLOBAL_KEY = Symbol(`${SYMBOL_PREFIX}runtime`);
 export const COMPONENT_ID_PROP_KEY = Symbol(`${SYMBOL_PREFIX}component_id`);
 export const GROUP_INFO_PROP_KEY = Symbol(`${SYMBOL_PREFIX}group_info`);

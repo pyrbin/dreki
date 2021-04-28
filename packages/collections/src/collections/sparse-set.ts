@@ -1,5 +1,5 @@
 import { Allocator, use_allocator } from "@dreki.land/shared";
-import { vec, Vec } from "../mod";
+import { vec, Vec } from "./vec";
 
 export class SparseSet<I extends number, T> implements Iterable<T> {
   readonly dense: Vec<T>;

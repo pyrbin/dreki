@@ -1,6 +1,5 @@
-import { use_allocator } from "../mod";
+import { use_allocator } from "./generic";
 import type { Allocator, TypedArray } from "../types/mod";
-import { iterable } from "./mod";
 
 /**
  * Allocates an array of size with provided allocator object

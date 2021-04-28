@@ -1,6 +1,5 @@
 import type { Type, record, ExcludeMethods } from "@dreki.land/shared";
 import { Entity } from "../entity/mod";
-import { World } from "../mod";
 
 export const INVALID_COMPONENT_ID = -1;
 

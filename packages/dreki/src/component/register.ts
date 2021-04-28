@@ -28,7 +28,7 @@ export type ComponentInfo = {
  * @returns
  */
 export function get_component_info_or_register(component: Component) {
-  return runtime().components.get(get_component_id(component)) ?? register(component)[0];
+  return runtime.components.get(get_component_id(component)) ?? register(component)[0];
 }
 
 /**
@@ -59,11 +59,10 @@ function is_tag_internal(component: Component) {
  */
 export function register(...components: Components) {
   const result: ComponentInfo[] = [];
-  const rt = runtime();
 
   for (let i = 0; i < components.length; i++) {
     const component = components[i];
-    const id = ++rt.component_id_counter;
+    const id = ++runtime.component_id_counter;
     const info: ComponentInfo = {
       id,
       mask: 1 << id,
@@ -79,13 +78,13 @@ export function register(...components: Components) {
       enumerable: false,
     });
 
-    rt.components.set(id, info);
+    runtime.components.set(id, info);
     result.push(info);
   }
 
-  const parent_pairs = resolve_closest_parents(Array.from(rt.components.values()));
+  const parent_pairs = resolve_closest_parents(Array.from(runtime.components.values()));
   for (const [info, parent] of parent_pairs) {
-    rt.components.get(info.id)!.super = parent;
+    runtime.components.get(info.id)!.super = parent;
   }
 
   return result;
