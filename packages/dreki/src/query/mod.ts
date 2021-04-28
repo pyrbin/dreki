@@ -1,5 +1,6 @@
 import { array_of, Tuple, Type } from "@dreki.land/shared";
-import { World } from "../mod";
+import { World } from "../world/mod";
+import { runtime } from "../world/runtime";
 import type { Component, ComponentInstance, IsTag } from "../component/mod";
 import {
   ComponentInfo,
@@ -228,7 +229,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @returns
    */
   [Symbol.iterator](): Iterator<QueryResult<T>> {
-    return this.iter_for(World.runtime.current_world);
+    return this.iter_for(runtime.current_world);
   }
 }
 

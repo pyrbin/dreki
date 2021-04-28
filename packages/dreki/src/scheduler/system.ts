@@ -1,5 +1,6 @@
 import { MAX_CHANGE_TICK_DELTA } from "../constants";
 import { World } from "../world/mod";
+import { runtime } from "../world/runtime";
 import { Runnable } from "./stage";
 
 export type SystemFunc = (world: World) => unknown;
@@ -19,7 +20,7 @@ export class System implements Runnable {
     const last_change_tick = world.increment_change_tick();
 
     // set current last_change_tick runtime context to current systems tick.
-    World.runtime.last_change_tick = this.last_change_tick;
+    runtime.last_change_tick = this.last_change_tick;
 
     this.func(world);
     this.last_change_tick = last_change_tick;

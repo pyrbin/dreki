@@ -1,29 +1,18 @@
 import type { ComponentId } from "../component/mod";
 import type { ComponentInfo } from "../component/register";
 import type { World, WorldId } from "./mod";
-import { RUNTIME_GLOBAL_KEY } from "../constants";
 
-export type Runtime = {
+export class runtime {
   // world info
-  worlds: Map<WorldId, World>;
-  world_id_counter: WorldId;
+  static worlds: Map<WorldId, World> = new Map();
+  static world_id_counter: WorldId = 0;
   // execution context
-  current_world: World;
-  last_change_tick: number;
+  static current_world: World = (undefined as unknown) as World;
+  static last_change_tick: number = 0;
   // component info
-  components: Map<ComponentId, ComponentInfo>;
-  component_id_counter: ComponentId;
-};
+  static components: Map<ComponentId, ComponentInfo> = new Map();
+  static component_id_counter: ComponentId = 0;
 
-export function runtime(): Runtime {
-  if ((globalThis as any)[RUNTIME_GLOBAL_KEY] !== undefined)
-    return (globalThis as any)[RUNTIME_GLOBAL_KEY] as Runtime;
-  return ((globalThis as any)[RUNTIME_GLOBAL_KEY] = {
-    worlds: new Map(),
-    current_world: (undefined as unknown) as World,
-    world_id_counter: 0,
-    last_change_tick: 0,
-    components: new Map(),
-    component_id_counter: 0,
-  }) as Runtime;
+  // hide constructor
+  private constructor() {}
 }

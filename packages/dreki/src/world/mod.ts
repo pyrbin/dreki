@@ -55,8 +55,6 @@ export class World {
     return this.entities.capacity;
   }
 
-  static readonly runtime = runtime();
-
   /**
    * Returns a new instance of `WorldBuilder`.
    * @returns
@@ -66,8 +64,8 @@ export class World {
   }
 
   constructor(options?: WorldOptions) {
-    this.id = World.runtime.world_id_counter++;
-    World.runtime.worlds.set(this.id, this);
+    this.id = runtime.world_id_counter++;
+    runtime.worlds.set(this.id, this);
 
     const capacity = Math.min(options?.capacity ?? DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY);
 
@@ -285,7 +283,7 @@ export class World {
    * Runs the `Scheduler` which updates all stages & systems.
    */
   update() {
-    World.runtime.current_world = this;
+    runtime.current_world = this;
     this.scheduler.run(this);
     this.clear_trackers();
   }
@@ -311,7 +309,7 @@ export class World {
   clear_trackers() {
     // increment world last_change tick.
     this.last_change_tick = this.increment_change_tick();
-    World.runtime.last_change_tick = this.last_change_tick;
+    runtime.last_change_tick = this.last_change_tick;
 
     // clear removed trackers
     for (let i = 0; i < this.removed.length; i++) {

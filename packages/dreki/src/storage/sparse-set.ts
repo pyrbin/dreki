@@ -1,5 +1,5 @@
-import { Vec, vec, slice_of } from "../../../collections/out/mod";
-import { Allocator, iterable, swap } from "../../../shared/out/mod";
+import { Vec, vec, slice_of } from "@dreki.land/collections";
+import { Allocator, iter, swap } from "@dreki.land/shared";
 import {
   ComponentInstance,
   ComponentFlags,
@@ -49,11 +49,11 @@ export class ComponentSparseSet implements ComponentStorage {
     // component storage
     this.dense = vec(capacity, allocator);
     this.entities = vec(capacity, () => Entity.null);
-    this.sparse = new Uint32Array(iterable(capacity, () => INVALID_ENTITY_INDEX));
+    this.sparse = new Uint32Array(iter(capacity, () => INVALID_ENTITY_INDEX));
 
     // component state
-    this.added = new Uint32Array(iterable(capacity, () => 0));
-    this.changed = new Uint32Array(iterable(capacity, () => 0));
+    this.added = new Uint32Array(iter(capacity, () => 0));
+    this.changed = new Uint32Array(iter(capacity, () => 0));
     this.flags = vec(capacity, ComponentFlags.None);
 
     /**
@@ -210,7 +210,7 @@ export class ComponentSparseSet implements ComponentStorage {
 
   /**
    * Returns true if component was added for given entity for current tick retrieved
-   * from `World.runtime.change_tick`.
+   * from `runtime.change_tick`.
    * @param entity
    * @returns
    */
@@ -220,7 +220,7 @@ export class ComponentSparseSet implements ComponentStorage {
 
   /**
    * Returns true if component was changed for given entity for current tick retrieved
-   * from `World.runtime.change_tick`.
+   * from `runtime.change_tick`.
    * @param entity
    * @returns
    */
@@ -282,11 +282,11 @@ export class ComponentSparseSet implements ComponentStorage {
      * @todo figure out if we can reallocate a typed array without creating a new one.
      */
     //@ts-ignore
-    this.sparse = new Uint32Array(iterable(length, (x) => this.sparse[x] ?? INVALID_ENTITY_INDEX));
+    this.sparse = new Uint32Array(iter(length, (x) => this.sparse[x] ?? INVALID_ENTITY_INDEX));
     //@ts-ignore
-    this.added = new Uint32Array(iterable(length, (x) => this.added[x] ?? 0));
+    this.added = new Uint32Array(iter(length, (x) => this.added[x] ?? 0));
     //@ts-ignore
-    this.changed = new Uint32Array(iterable(length, (x) => this.changed[x] ?? 0));
+    this.changed = new Uint32Array(iter(length, (x) => this.changed[x] ?? 0));
   }
 
   /**

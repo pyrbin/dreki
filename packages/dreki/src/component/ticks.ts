@@ -1,4 +1,4 @@
-import { World } from "../mod";
+import { runtime } from "../world/runtime";
 
 /**
  * Number type alias for Component ticks.
@@ -7,14 +7,14 @@ export type ComponentTick = number;
 
 /**
  * Returns true if component was changed for given entity for current tick retrieved
- * from `World.runtime.change_tick`.
+ * from `runtime.change_tick`.
  * @param entity
  * @returns
  */
 export function is_changed(
   ticks: readonly [added: ComponentTick, changed: ComponentTick],
-  last_change_tick: ComponentTick = World.runtime.last_change_tick,
-  change_tick: ComponentTick = World.runtime.current_world.change_tick,
+  last_change_tick: ComponentTick = runtime.last_change_tick,
+  change_tick: ComponentTick = runtime.current_world.change_tick,
 ) {
   return (
     is_tick_changed(ticks[1], last_change_tick, change_tick) &&
@@ -24,14 +24,14 @@ export function is_changed(
 
 /**
  * Returns true if component was changed for given entity for current tick retrieved
- * from `World.runtime.change_tick`.
+ * from `runtime.change_tick`.
  * @param entity
  * @returns
  */
 export function is_added(
   ticks: readonly [added: ComponentTick, changed: ComponentTick],
-  last_change_tick: ComponentTick = World.runtime.last_change_tick,
-  change_tick: ComponentTick = World.runtime.current_world.change_tick,
+  last_change_tick: ComponentTick = runtime.last_change_tick,
+  change_tick: ComponentTick = runtime.current_world.change_tick,
 ) {
   return is_tick_changed(ticks[0], last_change_tick, change_tick);
 }
