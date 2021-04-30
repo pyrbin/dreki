@@ -1,5 +1,11 @@
 # @dreki.land/shared
 
+## 0.0.6
+
+### Patch Changes
+
+- f5b2960: fixed circular dependencies
+
 ## 0.0.5
 
 ### Patch Changes

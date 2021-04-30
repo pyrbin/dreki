@@ -1,6 +1,6 @@
 {
   "name": "@dreki.land/shared",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Shared utilities types, functions etc. used within dreki",
   "license": "MIT",
   "private": false,
