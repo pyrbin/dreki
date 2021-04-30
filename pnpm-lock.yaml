@@ -22,35 +22,30 @@ importers:
 
   examples/demo:
     specifiers:
-      '@dreki.land/3d': workspace:*
+      '@sveltejs/adapter-node': next
       '@sveltejs/kit': next
       dreki: workspace:*
       svelte: ^3.29.0
       svelte-preprocess: ^4.0.0
       tslib: ^2.0.0
+      typescript: ^4.0.0
       vite: ^2.1.0
     dependencies:
-      '@dreki.land/3d': link:../../packages/3d
       dreki: link:../../packages/dreki
     devDependencies:
-      '@sveltejs/kit': 1.0.0-next.92_svelte@3.35.0+vite@2.1.2
+      '@sveltejs/adapter-node': 1.0.0-next.17
+      '@sveltejs/kit': 1.0.0-next.93_svelte@3.35.0+vite@2.1.2
       svelte: 3.35.0
-      svelte-preprocess: 4.6.9_svelte@3.35.0
+      svelte-preprocess: 4.6.9_svelte@3.35.0+typescript@4.2.3
       tslib: 2.1.0
+      typescript: 4.2.3
       vite: 2.1.2
 
-  packages/3d:
+  examples/simple-query:
     specifiers:
-      '@dimforge/rapier3d': ^0.5.3
-      '@types/three': ^0.127.1
       dreki: workspace:*
-      three: ^0.128.0
     dependencies:
-      '@dimforge/rapier3d': 0.5.3
-      dreki: link:../dreki
-      three: 0.128.0
-    devDependencies:
-      '@types/three': 0.127.1
+      dreki: link:../../packages/dreki
 
   packages/collections:
     specifiers:
@@ -665,10 +660,6 @@ packages:
       prettier: 1.19.1
     dev: true
 
-  /@dimforge/rapier3d/0.5.3:
-    resolution: {integrity: sha512-QyL88DsGGS1PorCbuXiG1GAvdVzKeVqrKefOkivyoDaKDtMS80GDIu7a99PA+MTzHC5GNq0p/CAn9s5Pp/EGBA==}
-    dev: false
-
   /@istanbuljs/load-nyc-config/1.1.0:
     resolution: {integrity: sha512-VjeHSlIzpv/NyD3N0YuHfXOPDIixcA1q2ZV98wsMqcYlPmv2n3Yb2lYP9XMElnaFVXg5A7YLTeLu6V84uQDjmQ==}
     engines: {node: '>=8'}
@@ -967,8 +958,12 @@ packages:
       '@sinonjs/commons': 1.8.2
     dev: true
 
-  /@sveltejs/kit/1.0.0-next.92_svelte@3.35.0+vite@2.1.2:
-    resolution: {integrity: sha512-4XZP363L5xol78HMAi6oXlgwM/WO2d/YSc5TQtMNglXCPBlzfc366ouTpizhEkpJW23m4AMGuo5hI+44jd4Aqg==}
+  /@sveltejs/adapter-node/1.0.0-next.17:
+    resolution: {integrity: sha512-kRGW9S0yf9X5kxFdW2sYF3s/bgME3Xyu/rnFEf121bSv0q7NhWktuuRWH3WbS5wQnFRoN+0s/1PaRK3ErNHsVQ==}
+    dev: true
+
+  /@sveltejs/kit/1.0.0-next.93_svelte@3.35.0+vite@2.1.2:
+    resolution: {integrity: sha512-WvmRj1Zk+SCbKYZGXCPlocOvGXRYGFOeZQC/k3C6KWAF11cM3H0i0mGzL0GmwrPmv35AjFtmH2iJ/J100ftUZw==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
     peerDependencies:
@@ -1196,10 +1191,6 @@ packages:
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}
-    dev: true
-
-  /@types/three/0.127.1:
-    resolution: {integrity: sha512-e90iYq3zde3axANg7BPZY0fKrez1AzveamIIFk23PMh9WtCx91geokDy+yEAIymdIldgUpvezAP6+zCV3oekXw==}
     dev: true
 
   /@types/yargs-parser/20.2.0:
@@ -4096,7 +4087,7 @@ packages:
       svelte: 3.35.0
     dev: true
 
-  /svelte-preprocess/4.6.9_svelte@3.35.0:
+  /svelte-preprocess/4.6.9_svelte@3.35.0+typescript@4.2.3:
     resolution: {integrity: sha512-SROWH0rB0DJ+0Ii264cprmNu/NJyZacs5wFD71ya93Cg/oA2lKHgQm4F6j0EWA4ktFMzeuJJm/eX6fka39hEHA==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -4142,6 +4133,7 @@ packages:
       detect-indent: 6.0.0
       strip-indent: 3.0.0
       svelte: 3.35.0
+      typescript: 4.2.3
     dev: true
 
   /svelte/3.35.0:
@@ -4181,10 +4173,6 @@ packages:
       glob: 7.1.6
       minimatch: 3.0.4
     dev: true
-
-  /three/0.128.0:
-    resolution: {integrity: sha512-i0ap/E+OaSfzw7bD1TtYnPo3VEplkl70WX5fZqZnfZsE3k3aSFudqrrC9ldFZfYFkn1zwDmBcdGfiIm/hnbyZA==}
-    dev: false
 
   /throat/6.0.1:
     resolution: {integrity: sha512-8hmiGIJMDlwjg7dlJ4yKGLK8EsYqKgPWbG3b4wjJddKNwc7N7Dpn08Df4szr/sZdMVeOstrdYSsqzX6BYbcB+w==}
