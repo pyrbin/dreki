@@ -1,13 +1,27 @@
-<script lang="ts">
-  import { onMount } from "svelte";
-  import { init } from "./game";
+<script>
+  import { Position } from "../game/components";
+  import { World, query } from "dreki";
+	import { onMount } from "svelte";
 
-  onMount(() => {
-    const game = init(10_000);
-    function update() {
-      game.update();
-      requestAnimationFrame(update);
+  onMount(() => requestAnimationFrame(update));
+
+  const all = query(Position);
+  const mover = () => {
+    for(const [ pos ] of all) {
+      pos.x += 0.15
     }
-    requestAnimationFrame(update);
-  })
+  }
+
+  const world = World.build()
+    .systems(mover)
+    .done();
+
+  const player = world.spawn(Position);
+
+  const update = () => {
+    world.update();
+    requestAnimationFrame(update)
+  }
 </script>
+
+<div id="game"></div>
