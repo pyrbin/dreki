@@ -1,24 +1,17 @@
 <script>
-  import { Position } from "../game/components";
-  import { World, query } from "dreki";
+  import { init } from "../game/mod";
 	import { onMount } from "svelte";
 
   onMount(() => requestAnimationFrame(update));
 
-  const all = query(Position);
-  const mover = () => {
-    for(const [ pos ] of all) {
-      pos.x += 0.15
-    }
-  }
+  const { world, time } = init();
+  let previous = 0;
 
-  const world = World.build()
-    .systems(mover)
-    .done();
+  const update = (current: number) => {
+    const dt = current - previous;
+    previous = current;
 
-  const player = world.spawn(Position);
-
-  const update = () => {
+    time.dt = dt;
     world.update();
     requestAnimationFrame(update)
   }

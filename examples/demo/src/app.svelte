@@ -2,10 +2,9 @@
   import Game from "./lib/game.svelte";
 </script>
 
-<Game />
-
 <main>
     🐲 dreki / demo
+    <Game />
 </main>
 
 <style>
