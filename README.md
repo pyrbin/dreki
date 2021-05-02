@@ -23,7 +23,7 @@ _TODO_
 |                                                      |                                                                                              |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | **[dreki](packages/dreki/)**                         | Core **Entity-Component System** library                                                     |
-| **[@dreki.land/3d](packages/3d/)** _(WIP)_           | A **3D plugin** created with [three.js](https://threejs.org/) & [rapier](https://rapier.rs/) |
+| **[dreki-3d](packages/3d/)** _(WIP)_                 | A **3D plugin** created with [three.js](https://threejs.org/) & [rapier](https://rapier.rs/) |
 | **[@dreki.land/collections](packages/collections/)** | Common data-structures used within **dreki**                                                 |
 | **[@dreki.land/shared](packages/shared/)**           | Shared utilities (**types**, **functions** etc.) used within **dreki**                       |
 

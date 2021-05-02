@@ -2,14 +2,14 @@
   "name": "dreki",
   "description": "🐉 An Entity-Component System library written in Typescript",
   "scripts": {
-    "build": "pnpm build --filter=\"@dreki.land/*\" --filter=\"dreki\"",
+    "build": "pnpm build --filter=\"@dreki.land/*\" --filter=\"dreki\" --filter=\"dreki-*\"",
     "lint": "pnpm check-format",
     "changeset": "changeset",
     "format": "prettier --write packages/ --config .prettierrc --ignore-path .gitignore",
     "check-format": "prettier --check packages/ --config .prettierrc --ignore-path .gitignore",
     "test": "jest --testTimeout=10000",
     "test:watch": "jest --watch --testTimeout=10000",
-    "release": "pnpm build && pnpm publish --filter=\"@dreki.land/*\" --filter=\"dreki\""
+    "release": "pnpm build && pnpm publish --filter=\"@dreki.land/*\" --filter=\"dreki\" --filter=\"dreki-*\""
   },
   "devDependencies": {
     "@changesets/cli": "^2.14.1",

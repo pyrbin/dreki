@@ -24,6 +24,7 @@ importers:
     specifiers:
       '@sveltejs/vite-plugin-svelte': next
       dreki: workspace:*
+      dreki-3d: workspace:*
       svelte: ^3.35.0
       svelte-preprocess: ^4.6.9
       tailwindcss: ^2.1.2
@@ -32,6 +33,7 @@ importers:
       vite-plugin-tailwind: ^0.0.4
     dependencies:
       dreki: link:../../packages/dreki
+      dreki-3d: link:../../packages/3d
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_svelte@3.35.0+vite@2.2.3
       svelte: 3.35.0
@@ -40,6 +42,19 @@ importers:
       typescript: 4.2.3
       vite: 2.2.3
       vite-plugin-tailwind: 0.0.4
+
+  packages/3d:
+    specifiers:
+      '@dimforge/rapier3d': ^0.4.1
+      '@types/three': ^0.126.1
+      dreki: workspace:*
+      three: ^0.126.1
+    dependencies:
+      '@dimforge/rapier3d': 0.4.1
+      dreki: link:../dreki
+      three: 0.126.1
+    devDependencies:
+      '@types/three': 0.126.2
 
   packages/collections:
     specifiers:
@@ -658,6 +673,10 @@ packages:
       prettier: 1.19.1
     dev: true
 
+  /@dimforge/rapier3d/0.4.1:
+    resolution: {integrity: sha512-XptLyqPoFRZ+kfxFAigO3WWsNlTzL7yMUAPsDkny8C6HF9XLTC1KEh7u6ssNG9MIh58PomjqQtocW8zTyj4G2g==}
+    dev: false
+
   /@fullhuman/postcss-purgecss/3.1.3:
     resolution: {integrity: sha512-kwOXw8fZ0Lt1QmeOOrd+o4Ibvp4UTEBFQbzvWldjlKv5n+G9sXfIPn1hh63IQIL8K8vbvv1oYMJiIUbuy9bGaA==}
     dependencies:
@@ -1205,6 +1224,10 @@ packages:
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}
+    dev: true
+
+  /@types/three/0.126.2:
+    resolution: {integrity: sha512-6JqTgijtfXcTJik8NtiNxr2L90ex6ElM00qilOGeUcrEsJLOdzLJSIkXHUYS+KPAYQYtRJQKD6XaXds3HjS+gg==}
     dev: true
 
   /@types/yargs-parser/20.2.0:
@@ -4964,6 +4987,10 @@ packages:
       glob: 7.1.6
       minimatch: 3.0.4
     dev: true
+
+  /three/0.126.1:
+    resolution: {integrity: sha512-eOEXnZeE1FDV0XgL1u08auIP13jxdN9LQBAEmlErYzMxtIIfuGIAZbijOyookALUhqVzVOx0Tywj6n192VM+nQ==}
+    dev: false
 
   /throat/6.0.1:
     resolution: {integrity: sha512-8hmiGIJMDlwjg7dlJ4yKGLK8EsYqKgPWbG3b4wjJddKNwc7N7Dpn08Df4szr/sZdMVeOstrdYSsqzX6BYbcB+w==}
