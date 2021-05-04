@@ -7,8 +7,10 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@three-ts/orbit-controls": "^1.4.7",
     "dreki": "workspace:*",
-    "dreki-3d": "workspace:*"
+    "dreki-3d": "workspace:*",
+    "three": "^0.126.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "next",
