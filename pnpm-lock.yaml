@@ -23,23 +23,48 @@ importers:
   examples/demo:
     specifiers:
       '@sveltejs/vite-plugin-svelte': next
+      '@three-ts/orbit-controls': ^1.4.7
+      '@types/stats': ^0.16.30
+      '@types/three': ^0.127.1
       dreki: workspace:*
+      dreki-3d: workspace:*
+      stats.js: ^0.17.0
       svelte: ^3.35.0
       svelte-preprocess: ^4.6.9
       tailwindcss: ^2.1.2
+      three: ^0.126.1
       typescript: ^4.2.3
       vite: ^2.1.5
       vite-plugin-tailwind: ^0.0.4
     dependencies:
+      '@three-ts/orbit-controls': 1.4.7
       dreki: link:../../packages/dreki
+      dreki-3d: link:../../packages/3d
+      stats.js: 0.17.0
+      three: 0.126.1
     devDependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_svelte@3.35.0+vite@2.2.3
+      '@types/stats': 0.16.30
+      '@types/three': 0.127.1
       svelte: 3.35.0
       svelte-preprocess: 4.6.9_svelte@3.35.0+typescript@4.2.3
       tailwindcss: 2.1.2
       typescript: 4.2.3
       vite: 2.2.3
       vite-plugin-tailwind: 0.0.4
+
+  packages/3d:
+    specifiers:
+      '@dimforge/rapier3d': ^0.4.1
+      '@types/three': ^0.126.1
+      dreki: workspace:*
+      three: ^0.126.1
+    dependencies:
+      '@dimforge/rapier3d': 0.4.1
+      dreki: link:../dreki
+      three: 0.126.1
+    devDependencies:
+      '@types/three': 0.126.2
 
   packages/collections:
     specifiers:
@@ -550,6 +575,10 @@ packages:
       minimist: 1.2.5
     dev: true
 
+  /@dimforge/rapier3d/0.4.1:
+    resolution: {integrity: sha512-XptLyqPoFRZ+kfxFAigO3WWsNlTzL7yMUAPsDkny8C6HF9XLTC1KEh7u6ssNG9MIh58PomjqQtocW8zTyj4G2g==}
+    dev: false
+
   /@fullhuman/postcss-purgecss/3.1.3:
     resolution: {integrity: sha512-kwOXw8fZ0Lt1QmeOOrd+o4Ibvp4UTEBFQbzvWldjlKv5n+G9sXfIPn1hh63IQIL8K8vbvv1oYMJiIUbuy9bGaA==}
     dependencies:
@@ -981,6 +1010,12 @@ packages:
       tailwindcss: 2.1.2_caf414ac65a978d0d57907a0ec9fb41e
     dev: true
 
+  /@three-ts/orbit-controls/1.4.7:
+    resolution: {integrity: sha512-1OVZnc2VTHCoHberL50LBbltjnqVpOBhmuJwKPqzn6sThQwvVU1E13cpuJ2SWWOMoMLF+4hE3ICi4KHsZA/CJw==}
+    dependencies:
+      three: 0.126.1
+    dev: false
+
   /@types/babel__core/7.1.14:
     resolution: {integrity: sha512-zGZJzzBUVDo/eV6KgbE0f0ZI7dInEYvo12Rb70uNQDshC3SkRMb67ja0GgRHZgAX3Za6rhaWlvbDO8rrGyAb1g==}
     dependencies:
@@ -1075,6 +1110,18 @@ packages:
 
   /@types/stack-utils/2.0.0:
     resolution: {integrity: sha512-RJJrrySY7A8havqpGObOB4W92QXKJo63/jFLLgpvOtsGUqbQZ9Sbgl35KMm1DjC6j7AvmmU2bIno+3IyEaemaw==}
+    dev: true
+
+  /@types/stats/0.16.30:
+    resolution: {integrity: sha1-3rX6blnG1nvW4PYaUe9jCoOoTOk=}
+    dev: true
+
+  /@types/three/0.126.2:
+    resolution: {integrity: sha512-6JqTgijtfXcTJik8NtiNxr2L90ex6ElM00qilOGeUcrEsJLOdzLJSIkXHUYS+KPAYQYtRJQKD6XaXds3HjS+gg==}
+    dev: true
+
+  /@types/three/0.127.1:
+    resolution: {integrity: sha512-e90iYq3zde3axANg7BPZY0fKrez1AzveamIIFk23PMh9WtCx91geokDy+yEAIymdIldgUpvezAP6+zCV3oekXw==}
     dev: true
 
   /@types/yargs-parser/20.2.0:
@@ -4954,6 +5001,10 @@ packages:
       object-copy: 0.1.0
     dev: true
 
+  /stats.js/0.17.0:
+    resolution: {integrity: sha1-scPcRtlEmLV4t/05hbgaznExzH0=}
+    dev: false
+
   /statuses/1.5.0:
     resolution: {integrity: sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=}
     engines: {node: '>= 0.6'}
@@ -5255,6 +5306,10 @@ packages:
       glob: 7.1.6
       minimatch: 3.0.4
     dev: true
+
+  /three/0.126.1:
+    resolution: {integrity: sha512-eOEXnZeE1FDV0XgL1u08auIP13jxdN9LQBAEmlErYzMxtIIfuGIAZbijOyookALUhqVzVOx0Tywj6n192VM+nQ==}
+    dev: false
 
   /throat/5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
