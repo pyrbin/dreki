@@ -87,7 +87,7 @@ export class Storage {
         const phantom_storage = new PhantomComponentStorage(other_info, new_storage);
         for (const entity of other.entities) {
           // Migrate existing components & entities.
-          const result = other.get_with_state(entity);
+          const result = other.get_with_state(entity)!;
           phantom_storage.insert(entity, result[0], result[1], result[2]);
           phantom_storage.set_changed_tick(entity, result[3]);
         }

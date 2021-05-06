@@ -31,7 +31,7 @@ export type ComponentStorage = {
   remove(entity: Entity): boolean;
   has(entity: Entity): boolean;
   get(entity: Entity): ComponentInstance;
-  get_with_state(entity: Entity): ComponentState;
+  get_with_state(entity: Entity): ComponentState | undefined;
 
   set_flag(entity: Entity, fn: (flag: ComponentFlags) => ComponentFlags): void;
   set_added_tick(entity: Entity, changed_tick: ComponentTick): void;
