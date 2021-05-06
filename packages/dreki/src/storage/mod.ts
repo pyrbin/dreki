@@ -74,7 +74,7 @@ export class Storage {
         // If it's a phantom storage, migrate existing entities & set reference
         // to the new storage that's to be inserted.
         for (const entity of other.entities) {
-          (new_storage as PhantomComponentStorage).entities.insert(entity.index, entity);
+          (new_storage as PhantomComponentStorage).entities.add(entity);
         }
         other.change_reference(new_storage);
       } else if (other instanceof ComponentSparseSet) {
