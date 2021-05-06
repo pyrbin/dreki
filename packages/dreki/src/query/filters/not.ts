@@ -13,6 +13,7 @@ import { FilterType, impl_filter } from "../filter";
  * ```
  */
 export const not = impl_filter(
+  "not",
   (world, entity, component) => {
     return !world.has(entity, component);
   },

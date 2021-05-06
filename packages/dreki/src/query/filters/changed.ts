@@ -20,4 +20,4 @@ import { impl_filter } from "../filter";
  * }
  * ```
  */
-export const changed = impl_filter((world, entity, [, , ...ticks]) => is_changed(ticks));
+export const changed = impl_filter("changed", (world, entity, [, , ...ticks]) => is_changed(ticks));
