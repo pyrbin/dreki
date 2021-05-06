@@ -22,6 +22,7 @@ import {
   MAX_ENTITY_CAPACITY,
 } from "../constants";
 import { WorldBuilder } from "./builder";
+import type { Plugin } from "./plugin";
 
 /**
  * Represents the id of a world
@@ -45,6 +46,7 @@ export class World {
   readonly storage: Storage;
   readonly resources: Resources;
   readonly scheduler: Scheduler;
+  readonly plugins: Plugin[];
 
   readonly removed: SparseSet<ComponentId, Set<Entity>>;
 
@@ -73,12 +75,28 @@ export class World {
       storage?.set_changed_tick(entity, this.change_tick);
     });
 
+    this.plugins = [];
     this.scheduler = new Scheduler();
     this.resources = new Resources();
     this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
+  }
+
+  /**
+   * Iterate each plugin & call their `load` function. The call order equals the order of registration.
+   * Throws if a plugins load function returns false.
+   * ---
+   * Call this before running `update` if you have registered any plugin that implements a load function.
+   */
+  async load() {
+    for (const plugin of this.plugins.filter((x) => x.load != undefined)) {
+      const result = await plugin.load!(this);
+      if (!result) {
+        throw new Error(`Load failed for plugin: ${plugin}`);
+      }
+    }
   }
 
   /**
