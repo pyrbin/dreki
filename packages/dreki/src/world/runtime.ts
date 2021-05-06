@@ -2,7 +2,7 @@ import type { ComponentId } from "../component/mod";
 import type { ComponentInfo } from "../component/register";
 import type { World, WorldId } from "./mod";
 
-export class runtime {
+export abstract class runtime {
   // world info
   static worlds: Map<WorldId, World> = new Map();
   static world_id_counter: WorldId = 0;
