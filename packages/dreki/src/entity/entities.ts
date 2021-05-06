@@ -7,7 +7,7 @@ export type EntityMeta = {
 };
 
 export class Entities {
-  private meta: Vec<EntityMeta>;
+  private metadata: Vec<EntityMeta>;
 
   /**
    * Stores recently freed index. Indices in this list are always
@@ -23,7 +23,7 @@ export class Entities {
    * @param on_realloc
    */
   constructor(capacity: number, private readonly on_realloc?: (length: number) => unknown) {
-    this.meta = vec(capacity, () => ({ generation: 0 }));
+    this.metadata = vec(capacity, () => ({ generation: 0 }));
     this.freelist = vec(32, 0);
     this.len = 0;
   }
@@ -44,16 +44,16 @@ export class Entities {
         this.len--;
         throw new Error(`Can't spawn new entity, max capacity reached (${this.capacity})`);
       }
-      this.meta.realloc(Math.min(Math.floor(this.capacity * 1.5), MAX_ENTITY_CAPACITY));
-      if (this.on_realloc) this.on_realloc(this.meta.capacity);
+      this.metadata.realloc(Math.min(Math.floor(this.capacity * 1.5), MAX_ENTITY_CAPACITY));
+      if (this.on_realloc) this.on_realloc(this.metadata.capacity);
     }
 
     if (index === undefined) {
       index = this.len - 1;
-      return new Entity(index, this.meta.raw[index].generation);
+      return new Entity(index, this.metadata.raw[index].generation);
     }
 
-    return new Entity(index, this.meta.raw[index].generation);
+    return new Entity(index, this.metadata.raw[index].generation);
   }
 
   /**
@@ -62,7 +62,7 @@ export class Entities {
    * @returns
    */
   public dispose(entity: Entity) {
-    const meta = this.meta.raw[entity.index];
+    const meta = this.metadata.raw[entity.index];
 
     // don't free if there is a generation mismatch
     if (meta.generation !== entity.generation) return;
@@ -79,14 +79,14 @@ export class Entities {
    */
   contains(entity: Entity): boolean {
     return (
-      entity.index < this.meta.length &&
+      entity.index < this.len &&
       entity.index >= 0 &&
-      entity.generation === this.meta.raw[entity.index].generation
+      entity.generation === this.metadata.raw[entity.index].generation
     );
   }
 
   get capacity() {
-    return this.meta.capacity;
+    return this.metadata.capacity;
   }
 
   get length() {
@@ -99,7 +99,7 @@ export class Entities {
    */
   [Symbol.iterator](): Iterator<Entity> {
     let read_index = 0;
-    const data = this.meta;
+    const data = this.metadata;
     const length = this.len;
     return {
       next(): IteratorResult<Entity> {
