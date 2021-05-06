@@ -22,6 +22,7 @@ export class ComponentSparseSet implements ComponentStorage {
   readonly dense: Vec<ComponentInstance>;
   readonly entities: Vec<Entity>;
   readonly sparse: Map<Entity, number>;
+  readonly removed: Map<Entity, ComponentInstance>;
 
   readonly flags: Vec<ComponentFlags>;
   readonly added: Uint32Array;
@@ -45,6 +46,7 @@ export class ComponentSparseSet implements ComponentStorage {
     // storage metadata
     this.info = info;
     this.phantoms = new Map();
+    this.removed = new Map();
 
     // component storage
     this.dense = vec(capacity, allocator);
@@ -57,7 +59,7 @@ export class ComponentSparseSet implements ComponentStorage {
     this.flags = vec(capacity, ComponentFlags.None);
 
     /**
-     * @todo why do i have to manually bind this?
+     * todo: why do i have to manually bind this?
      */
     this.realloc = this.realloc.bind(this);
   }
@@ -138,14 +140,19 @@ export class ComponentSparseSet implements ComponentStorage {
     swap(this.added, dense_index, current_length);
     swap(this.changed, dense_index, current_length);
 
-    // Remove & call dispose if component implements it
+    // Remove component
     const value = this.dense.swap_remove(dense_index);
-    value?.dispose?.();
+
+    // Add to remove buffer
+    this.removed.set(entity, value);
 
     if (this.phantoms.size > 0) {
       // Remove from phantom storages
       for (const phantom of this.phantoms.values()) {
-        phantom?.entities.delete(entity);
+        if (phantom.entities.has(entity)) {
+          phantom.entities.delete(entity);
+          phantom.removed.add(entity);
+        }
       }
     }
 
@@ -278,12 +285,51 @@ export class ComponentSparseSet implements ComponentStorage {
    */
   realloc(length: number) {
     /**
-     * @todo figure out if we can reallocate a typed array without creating a new one.
+     * todo: figure out if we can reallocate a typed array without creating a new one.
      */
     //@ts-ignore
     this.added = new Uint32Array(iter(length, (x) => this.added[x] ?? 0));
     //@ts-ignore
     this.changed = new Uint32Array(iter(length, (x) => this.changed[x] ?? 0));
+  }
+
+  /**
+   * Inserts an entity & component pair to removed cache.
+   * ! this is only used when migrating data when creating new storages & phantom storages
+   * @param entity
+   * @param component
+   */
+  add_removed(entity: Entity, component: ComponentInfo) {
+    this.removed.set(entity, component);
+  }
+
+  /**
+   * Returns a component (or undefined) if it's been removed since last frame for entity.
+   * @param entity
+   * @returns
+   */
+  get_removed(entity: Entity) {
+    return this.removed.get(entity);
+  }
+
+  /**
+   * Returns true if given `entity` has been removed from this storage.
+   * @param entity
+   * @returns
+   */
+  has_removed(entity: Entity) {
+    return this.removed.has(entity);
+  }
+
+  /**
+   *  Clear removed buffer
+   */
+  clear_removed() {
+    for (const [entity, component] of this.removed) {
+      // Call dispose if component implements it
+      component?.dispose?.();
+      this.removed.delete(entity);
+    }
   }
 
   /**
@@ -298,8 +344,14 @@ export class ComponentSparseSet implements ComponentStorage {
    * Returns an entity slice for this storage.
    * @returns
    */
-  entity_slice(): EntitySlice {
-    return slice_of(this.entities.raw, 0, this.length);
+  entity_slice(with_removed: boolean = false) {
+    return with_removed
+      ? slice_of([...this.entities.raw, ...this.removed.keys()], 0, this.length_with_removed)
+      : slice_of(this.entities.raw, 0, this.length);
+  }
+
+  get length_with_removed() {
+    return this.entities.length + this.removed.size;
   }
 
   get length() {

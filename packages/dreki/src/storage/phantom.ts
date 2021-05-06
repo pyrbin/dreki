@@ -1,4 +1,4 @@
-import { SparseSet, slice_of } from "@dreki.land/collections";
+import { slice_of } from "@dreki.land/collections";
 import { ComponentInstance, ComponentFlags, ComponentTick } from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { Entity } from "../entity/mod";
@@ -10,20 +10,27 @@ import { ComponentStorage, ComponentState } from "./components";
  */
 export class PhantomComponentStorage implements ComponentStorage {
   readonly info: ComponentInfo;
-  readonly entities: Set<Entity>;
   readonly reference: ComponentStorage;
+
+  readonly entities: Set<Entity>;
+  readonly removed: Set<Entity>;
 
   constructor(info: ComponentInfo, storage: ComponentStorage) {
     this.info = info;
     this.reference = storage;
     this.entities = new Set();
-    this.change_reference(storage);
+    this.removed = new Set();
+    this.set_reference(storage);
   }
 
-  change_reference(storage: ComponentStorage) {
+  set_reference(storage: ComponentStorage) {
     storage.register_phantom(this);
     //@ts-ignore
     this.reference = storage;
+  }
+
+  register_phantom(reference: PhantomComponentStorage) {
+    this.reference.register_phantom(reference);
   }
 
   insert(
@@ -37,7 +44,6 @@ export class PhantomComponentStorage implements ComponentStorage {
   }
 
   remove(entity: Entity): boolean {
-    this.entities.delete(entity);
     return this.reference.remove(entity);
   }
 
@@ -86,16 +92,38 @@ export class PhantomComponentStorage implements ComponentStorage {
     this.reference.check_ticks(change_tick);
   }
 
-  register_phantom(reference: PhantomComponentStorage) {
-    this.reference.register_phantom(reference);
+  add_removed(entity: Entity, component: ComponentInfo) {
+    this.removed.add(entity);
+    this.reference.add_removed(entity, component);
+  }
+
+  has_removed(entity: Entity): boolean {
+    return this.removed.has(entity);
+  }
+
+  get_removed(entity: Entity) {
+    if (!this.removed.has(entity)) return;
+    return this.reference.get_removed(entity);
+  }
+
+  clear_removed() {
+    for (const entity of this.removed) {
+      this.removed.delete(entity);
+    }
   }
 
   empty(): boolean {
     return this.entities.size === 0;
   }
 
-  entity_slice() {
-    return slice_of([...this.entities], 0, this.length);
+  entity_slice(with_removed: boolean = false) {
+    return with_removed
+      ? slice_of([...this.entities, ...this.removed], 0, this.length_with_removed)
+      : slice_of([...this.entities], 0, this.length);
+  }
+
+  get length_with_removed() {
+    return this.length + this.removed.size;
   }
 
   get length() {

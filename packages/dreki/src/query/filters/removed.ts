@@ -10,5 +10,4 @@ export const removed = impl_filter(
     return world.was_removed(entity, component);
   },
   FilterType.Entity,
-  FilterType.Omit,
 );

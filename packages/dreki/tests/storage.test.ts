@@ -34,10 +34,10 @@ test("component disabled flag", () => {
   const storage = new Storage(5);
   const info = get_info_helper();
   const stg = storage.get_or_create(info, 24);
-  const entt = Entity(0, 0);
-  stg.insert(entt, new Position(), ComponentFlags.None, 0);
-  storage.get(info.id).set_flag(entt, (flag) => bitflags.insert(flag, ComponentFlags.Disabled));
-  let [comp, flags] = storage.get(info.id).get_with_state(entt);
+  const entity = Entity(0, 0);
+  stg.insert(entity, new Position(), ComponentFlags.None, 0);
+  storage.get(info.id).set_flag(entity, (flag) => bitflags.insert(flag, ComponentFlags.Disabled));
+  let [comp, flags] = storage.get(info.id).get_with_state(entity);
   expect(bitflags.contains(flags, ComponentFlags.Disabled)).toBe(true);
 });
 

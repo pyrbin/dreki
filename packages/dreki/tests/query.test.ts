@@ -166,24 +166,37 @@ test("added filter", () => {
 });
 
 test("removed filter", () => {
+  const pos = new Position(200, 200);
   const added_pos = query(removed(Position), Scale);
   const world = World.build()
     .with({ capacity: 50 })
+    .components(Position1D)
     .systems(() => {
       for (const data of added_pos) {
-        expect(data.length).toBe(1);
+        expect(data.length).toBe(2);
+        expect(data[0]).toEqual(pos);
         called++;
       }
     })
     .done();
-  const entt = world.spawn(Scale, Position);
+  const entity = world.spawn(Scale, pos);
   world.update();
   world.update();
-  world.remove(entt, Position);
+  world.remove(entity, Position);
+  world.update();
+  world.add(entity, pos);
+  world.update();
+  world.update();
+  world.remove(entity, Position1D);
+  expect(world.get(entity, Position)).toBeUndefined();
+  world.update();
+  world.add(entity, pos);
   world.update();
   world.update();
   world.update();
-  expect(called).toBe(1);
+  world.despawn(entity);
+  world.update();
+  expect(called).toBe(3);
 });
 
 test("disabled filter", () => {
@@ -197,14 +210,14 @@ test("disabled filter", () => {
       }
     })
     .done();
-  const entt = world.spawn(Scale, Position);
+  const entity = world.spawn(Scale, Position);
   world.update();
   world.update();
-  world.disable(entt, Position);
+  world.disable(entity, Position);
   world.update();
-  world.enable(entt, Position);
+  world.enable(entity, Position);
   world.update();
-  world.disable(entt, Position);
+  world.disable(entity, Position);
   world.update();
   expect(called).toBe(2);
 });
@@ -253,9 +266,9 @@ test("tag component query", () => {
       }
     })
     .done();
-  const entt = world.spawn(Tag, Scale);
+  const entity = world.spawn(Tag, Scale);
   world.update();
-  world.add(entt, IsPlayer);
+  world.add(entity, IsPlayer);
   world.update();
   world.update();
   world.update();
@@ -268,21 +281,21 @@ test("entity parameter", () => {
     .with({ capacity: ITER })
     .systems((w) => {
       for (const result of query_with_entity) {
-        const [entt, pos] = result;
+        const [entity, pos] = result;
         expect(result.length).toBe(2);
         expect(typeof result[0]).toBe("number");
-        // If we fetch Position for entity `entt` is should be the same as the one
+        // If we fetch Position for entity `entity` is should be the same as the one
         // returned from the query result.
-        expect(w.get(entt, Position)).toEqual(pos);
+        expect(w.get(entity, Position)).toEqual(pos);
         called++;
       }
     })
     .done();
 
   for (const i of range(0, ITER)) {
-    const entt = world.spawn(new Position(i * Math.random() * ITER, 0));
+    const entity = world.spawn(new Position(i * Math.random() * ITER, 0));
     if (i % 2 === 0) {
-      world.add(entt, Entity);
+      world.add(entity, Entity);
     }
   }
 
