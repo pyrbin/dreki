@@ -21,7 +21,7 @@ export class ComponentSparseSet implements ComponentStorage {
   readonly info: ComponentInfo;
   readonly dense: Vec<ComponentInstance>;
   readonly entities: Vec<Entity>;
-  readonly sparse: Uint32Array;
+  readonly sparse: Map<Entity, number>;
 
   readonly flags: Vec<ComponentFlags>;
   readonly added: Uint32Array;
@@ -49,7 +49,7 @@ export class ComponentSparseSet implements ComponentStorage {
     // component storage
     this.dense = vec(capacity, allocator);
     this.entities = vec(capacity, () => Entity.null);
-    this.sparse = new Uint32Array(iter(capacity, () => INVALID_ENTITY_INDEX));
+    this.sparse = new Map();
 
     // component state
     this.added = new Uint32Array(iter(capacity, () => 0));
@@ -75,10 +75,9 @@ export class ComponentSparseSet implements ComponentStorage {
     flags: ComponentFlags,
     change_tick: ComponentTick,
   ): ComponentInstance {
-    const index = entity.index;
-    const dense_index = this.sparse[index];
+    const dense_index = this.sparse.get(entity);
 
-    if (dense_index === INVALID_ENTITY_INDEX) {
+    if (dense_index == undefined) {
       return this.allocate_new(entity, value, flags, change_tick);
     }
 
@@ -87,7 +86,7 @@ export class ComponentSparseSet implements ComponentStorage {
       for (const phantom of this.phantoms.values()) {
         const match_instance = value instanceof phantom?.info.component;
         if (!match_instance) {
-          phantom?.entities.remove(entity.index);
+          phantom?.entities.delete(entity);
         }
       }
     }
@@ -107,7 +106,7 @@ export class ComponentSparseSet implements ComponentStorage {
     change_tick: ComponentTick,
   ) {
     const dense_index = this.dense.length;
-    this.sparse[entity.index] = dense_index;
+    this.sparse.set(entity, dense_index);
     this.entities.push(entity);
     this.dense.push(value);
     this.flags.push(flags);
@@ -123,14 +122,14 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   remove(entity: Entity) {
-    const index = entity.index;
-    const dense_index = this.sparse[index];
+    const dense_index = this.sparse.get(entity);
 
-    if (dense_index === INVALID_ENTITY_INDEX) {
+    if (dense_index == undefined) {
       return false;
     }
 
-    this.sparse[index] = INVALID_ENTITY_INDEX;
+    this.sparse.delete(entity);
+
     const current_length = this.entities.length - 1;
 
     this.entities.swap_remove(dense_index);
@@ -146,15 +145,15 @@ export class ComponentSparseSet implements ComponentStorage {
     if (this.phantoms.size > 0) {
       // Remove from phantom storages
       for (const phantom of this.phantoms.values()) {
-        phantom?.entities.remove(entity.index);
+        phantom?.entities.delete(entity);
       }
     }
 
     const is_last = dense_index === this.dense.length;
 
     if (!is_last) {
-      const swapped_index = this.entities.raw[dense_index];
-      this.sparse[swapped_index.index] = dense_index;
+      const swapped_entity = this.entities.raw[dense_index];
+      this.sparse.set(swapped_entity, dense_index);
     }
 
     return true;
@@ -166,7 +165,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   get(entity: Entity) {
-    return this.dense.raw[this.sparse[entity.index]!];
+    return this.dense.raw[this.sparse.get(entity)!];
   }
 
   /**
@@ -175,7 +174,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   has(entity: Entity) {
-    return this.sparse[entity.index] !== INVALID_ENTITY_INDEX;
+    return this.sparse.has(entity);
   }
 
   /**
@@ -184,7 +183,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param fn
    */
   set_flag(entity: Entity, fn: (flag: ComponentFlags) => ComponentFlags) {
-    const dense_index = this.sparse[entity.index];
+    const dense_index = this.sparse.get(entity)!;
     this.flags.raw[dense_index] = fn(this.flags.raw[dense_index]);
   }
 
@@ -194,7 +193,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param changed_tick
    */
   set_added_tick(entity: Entity, changed_tick: number) {
-    const dense_index = this.sparse[entity.index];
+    const dense_index = this.sparse.get(entity)!;
     this.added[dense_index] = changed_tick;
   }
 
@@ -204,7 +203,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param changed_tick
    */
   set_changed_tick(entity: Entity, changed_tick: number) {
-    const dense_index = this.sparse[entity.index];
+    const dense_index = this.sparse.get(entity)!;
     this.changed[dense_index] = changed_tick;
   }
 
@@ -234,7 +233,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   get_with_state(entity: Entity) {
-    const dense_index = this.sparse[entity.index];
+    const dense_index = this.sparse.get(entity)!;
     return [
       this.dense.raw[dense_index],
       this.flags.raw[dense_index],
@@ -249,7 +248,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   get_ticks(entity: Entity) {
-    const dense_index = this.sparse[entity.index];
+    const dense_index = this.sparse.get(entity)!;
     return [this.added[dense_index], this.changed[dense_index]] as const;
   }
 
@@ -281,8 +280,6 @@ export class ComponentSparseSet implements ComponentStorage {
     /**
      * @todo figure out if we can reallocate a typed array without creating a new one.
      */
-    //@ts-ignore
-    this.sparse = new Uint32Array(iter(length, (x) => this.sparse[x] ?? INVALID_ENTITY_INDEX));
     //@ts-ignore
     this.added = new Uint32Array(iter(length, (x) => this.added[x] ?? 0));
     //@ts-ignore

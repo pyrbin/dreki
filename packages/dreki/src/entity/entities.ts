@@ -50,10 +50,10 @@ export class Entities {
 
     if (index === undefined) {
       index = this.len - 1;
-      return new Entity(index, this.metadata.raw[index].generation);
+      return Entity(index, this.metadata.raw[index].generation);
     }
 
-    return new Entity(index, this.metadata.raw[index].generation);
+    return Entity(index, this.metadata.raw[index].generation);
   }
 
   /**
@@ -62,13 +62,14 @@ export class Entities {
    * @returns
    */
   public dispose(entity: Entity) {
-    const meta = this.metadata.raw[entity.index];
+    const handle = Entity.handle_of(entity);
+    const meta = this.metadata.raw[handle.index];
 
     // don't free if there is a generation mismatch
-    if (meta.generation !== entity.generation) return;
+    if (meta.generation !== handle.generation) return;
 
     meta.generation++;
-    this.freelist.push(entity.index);
+    this.freelist.push(handle.index);
     this.len--;
   }
 
@@ -78,10 +79,11 @@ export class Entities {
    * @returns
    */
   contains(entity: Entity): boolean {
+    const handle = Entity.handle_of(entity);
     return (
-      entity.index < this.len &&
-      entity.index >= 0 &&
-      entity.generation === this.metadata.raw[entity.index].generation
+      handle.index < this.len &&
+      handle.index >= 0 &&
+      handle.generation === this.metadata.raw[handle.index].generation
     );
   }
 
@@ -105,7 +107,7 @@ export class Entities {
       next(): IteratorResult<Entity> {
         if (read_index < length) {
           return {
-            value: new Entity(read_index, data.raw[read_index++].generation),
+            value: Entity(read_index, data.raw[read_index++].generation),
           };
         }
         return {

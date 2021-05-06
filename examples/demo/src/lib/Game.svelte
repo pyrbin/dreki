@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { init } from "../game/mod";
 	import { onMount } from "svelte";
 

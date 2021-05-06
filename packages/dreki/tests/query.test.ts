@@ -45,7 +45,8 @@ test("simple non-filter query", () => {
   }
 
   expect(called).toBe(spawn_count * update_count);
-  const component = world.get(new Entity(spawn_count - 1, spawn_count - 1), Scale);
+  const component = world.get(Entity(spawn_count - 1, 0), Scale);
+
   expect(component.a).toBe(update_count * 24);
 });
 
@@ -269,7 +270,7 @@ test("entity parameter", () => {
       for (const result of query_with_entity) {
         const [entt, pos] = result;
         expect(result.length).toBe(2);
-        expect(result[0]).toBeInstanceOf(Entity);
+        expect(typeof result[0]).toBe("number");
         // If we fetch Position for entity `entt` is should be the same as the one
         // returned from the query result.
         expect(w.get(entt, Position)).toEqual(pos);
@@ -281,7 +282,7 @@ test("entity parameter", () => {
   for (const i of range(0, ITER)) {
     const entt = world.spawn(new Position(i * Math.random() * ITER, 0));
     if (i % 2 === 0) {
-      world.add(entt, Entity.null);
+      world.add(entt, Entity);
     }
   }
 

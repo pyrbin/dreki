@@ -62,7 +62,7 @@ test("singleton getter", () => {
 
   const player = world.single(IsPlayer);
 
-  expect(player.index).toBe(player_entity.index);
+  expect(player).toBe(player_entity);
   expect(world.get(player, Position)).toBe(new_pos);
 
   world.add(entity, IsPlayer);
