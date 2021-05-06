@@ -1,7 +1,7 @@
 import { has_own_property, record } from "@dreki.land/shared";
 import type { Entity } from "../entity/mod";
 import type { World } from "../mod";
-import type { Component, ComponentFlags, ComponentInstance, Components } from "../component/mod";
+import type { Component, Components } from "../component/mod";
 import type { ComponentState } from "../storage/components";
 
 export enum FilterType {
@@ -29,7 +29,11 @@ export const FILTER_TYPE_KEY = "$$__dreki__filter";
  * @param predicate
  * @returns
  */
-export function impl_filter<T extends readonly FilterType[]>(predicate: Predicate<T>, ...types: T) {
+export function impl_filter<T extends readonly FilterType[]>(
+  identifier: string,
+  predicate: Predicate<T>,
+  ...types: T
+) {
   const filterTypes = types?.reduce(
     (map, type) => ({
       ...map,
@@ -37,14 +41,20 @@ export function impl_filter<T extends readonly FilterType[]>(predicate: Predicat
     }),
     {},
   );
-  return <U extends Components>(...include: U): Filter<T, U> => {
+
+  const filter = <U extends Components>(...include: U): Filter<T, U> => {
     return {
       include,
+      identifier,
       predicate,
       [FILTER_TYPE_KEY]: true,
       ...filterTypes,
     } as Filter<T, U>;
   };
+
+  filter.identifier = identifier;
+
+  return filter;
 }
 
 export type ComponentFilter = Filter<[]>;
@@ -73,6 +83,7 @@ export type Filter<
   U extends readonly Component[] = readonly Component[]
 > = {
   include: U;
+  identifier: string;
   predicate: Predicate<T>;
   [FILTER_TYPE_KEY]: true;
 } & {

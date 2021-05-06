@@ -71,12 +71,16 @@ export class Storage {
       const other_info = other.info;
       if (!other_info?.super || other_info.super !== info.component) continue;
       if (other instanceof PhantomComponentStorage) {
-        // If it's a phantom storage, migrate existing entities & set reference
-        // to the new storage that's to be inserted.
+        // If it's a phantom storage, migrate existing entities
         for (const entity of other.entities) {
-          (new_storage as PhantomComponentStorage).entities.insert(entity.index, entity);
+          (new_storage as PhantomComponentStorage).entities.add(entity);
         }
-        other.change_reference(new_storage);
+        // migrate removed components/entities
+        for (const entity of other.removed) {
+          (new_storage as PhantomComponentStorage).removed.add(entity);
+        }
+        // set reference to the new storage that's to be inserted.
+        other.set_reference(new_storage);
       } else if (other instanceof ComponentSparseSet) {
         // If it's a non-phantom storage, it should be converted to one & point to the
         // new storage that's to be inserted.
@@ -87,11 +91,15 @@ export class Storage {
           phantom_storage.insert(entity, result[0], result[1], result[2]);
           phantom_storage.set_changed_tick(entity, result[3]);
         }
+        for (const [entity, component] of other.removed) {
+          // migrate removed components/entities
+          new_storage.add_removed(entity, component);
+        }
         for (const [, ph] of other.phantoms) {
-          // Register previous phantom storages.
+          // register previous phantom storages.
           new_storage.register_phantom(ph);
         }
-        // Replace old storage with created phantom storage.
+        // replace old storage with created phantom storage.
         this.sets.insert(other_info.id, phantom_storage);
       }
     }
@@ -104,6 +112,16 @@ export class Storage {
   check_change_ticks(change_tick: number) {
     for (let i = 0; i < this.sets.dense.length; i++) {
       this.sets.dense.raw[i].check_ticks(change_tick);
+    }
+  }
+
+  /**
+   * Clear remove caches in storages.
+   * @param change_tick
+   */
+  clear_removed_cache() {
+    for (let i = 0; i < this.sets.dense.length; i++) {
+      this.sets.dense.raw[i].clear_removed();
     }
   }
 
@@ -137,6 +155,27 @@ export class Storage {
       }
     }
     return set?.entity_slice() ?? undefined;
+  }
+
+  /**
+   * Like `shortest_slice_of` but also includes removed entities since last call to `clear_removed_caches`.
+   * @param components
+   * @returns
+   */
+  shortest_slice_of_with_removed(...components: ComponentInfo[]): EntitySlice | undefined {
+    let length = 0xfffff;
+    let set: ComponentStorage | undefined = undefined;
+
+    for (let i = 0; i < components.length; i++) {
+      const info = components[i];
+      const current = this.get(info.id);
+      if (current === undefined) return undefined;
+      if (current.length_with_removed < length) {
+        length = current.length_with_removed;
+        set = current;
+      }
+    }
+    return set?.entity_slice(true) ?? undefined;
   }
 }
 

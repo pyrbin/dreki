@@ -18,11 +18,12 @@ export function init() {
     .resources(time)
     .done();
 
-  const player = world.spawn(Position, new Speed(20));
+  for (let i = 0; i < 10_000; i++) {
+    world.spawn(Position, new Speed(20));
+  }
 
   return {
     world,
-    player,
     time,
   };
 }

@@ -19,9 +19,37 @@ const ENTITY_GENERATION_MASK = (ENTITY_MAX_GENERATION << ENTITY_INDEX_BITS) >>> 
 export const INVALID_ENTITY_INDEX = ENTITY_MAX_INDEX;
 
 /**
- * Unique ID of an entity
+ * Unique integer ID of an entity.
  */
-export class Entity {
+export type Entity = number;
+
+/**
+ *  Create an [Entity] from given index & generation
+ */
+export const Entity = (index: number, generation: number = 0) =>
+  new EntityHandle(index, generation).id();
+
+/**
+ *  Create an [Entity] from an [EntityId] instance
+ */
+Entity.of = (handle: EntityHandle) => handle.id();
+
+/**
+ *  Convert an [Entity] to an [EntityId] instance
+ * @param entity
+ * @returns
+ */
+Entity.handle_of = (entity: Entity) => EntityHandle.from_id(entity);
+
+/**
+ * Retrieves an empty Entity.
+ */
+Entity.null = INVALID_ENTITY_INDEX as Entity;
+
+/**
+ * Unique handle of an entity
+ */
+export class EntityHandle {
   /**
    * No two simultaneously-alive entities shares the same index,
    * but may share with "dead" ones.
@@ -36,7 +64,7 @@ export class Entity {
   readonly generation: number = 0;
 
   /**
-   * Construct an entity of given index & generation
+   * Construct an entity handle of given index & generation
    * @param index
    * @param generation
    * @returns
@@ -47,18 +75,11 @@ export class Entity {
   }
 
   /**
-   * Retrieves an empty Entity ID.
-   */
-  static get null() {
-    return new Entity(-1, 0);
-  }
-
-  /**
-   * Represent given entity as a unique number
+   * Represent given entity handle as an entity id
    * @param entity
    * @returns
    */
-  bits() {
+  id(): Entity {
     return (
       (((this.generation << ENTITY_INDEX_BITS) & ENTITY_GENERATION_MASK) |
         (this.index & ENTITY_INDEX_MASK)) >>>
@@ -72,11 +93,14 @@ export class Entity {
    * @param id
    * @returns
    */
-  static from_bits(id: number): Entity {
-    return new Entity(id & ENTITY_INDEX_MASK, (id & ENTITY_GENERATION_MASK) >>> ENTITY_INDEX_BITS);
+  static from_id(id: number): EntityHandle {
+    return new EntityHandle(
+      id & ENTITY_INDEX_MASK,
+      (id & ENTITY_GENERATION_MASK) >>> ENTITY_INDEX_BITS,
+    );
   }
 
   toString() {
-    return `Entity { index: ${this.index}, generation: ${this.generation}`;
+    return `EntityId { index: ${this.index}, generation: ${this.generation}`;
   }
 }

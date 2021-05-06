@@ -6,6 +6,6 @@ import { impl_filter } from "../filter";
  * Filter that retrieves the given components if they are disabled.
  * @see World.disable
  */
-export const disabled = impl_filter((world, entity, [, flag]) => {
+export const disabled = impl_filter("disabled", (world, entity, [, flag]) => {
   return bitflags.contains(flag, ComponentFlags.Disabled);
 });

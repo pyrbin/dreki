@@ -22,6 +22,7 @@ import {
   MAX_ENTITY_CAPACITY,
 } from "../constants";
 import { WorldBuilder } from "./builder";
+import type { Plugin } from "./plugin";
 
 /**
  * Represents the id of a world
@@ -45,8 +46,7 @@ export class World {
   readonly storage: Storage;
   readonly resources: Resources;
   readonly scheduler: Scheduler;
-
-  readonly removed: SparseSet<ComponentId, Set<Entity>>;
+  readonly plugins: Plugin[];
 
   change_tick: number = 1;
   last_change_tick: number = 0;
@@ -73,12 +73,27 @@ export class World {
       storage?.set_changed_tick(entity, this.change_tick);
     });
 
+    this.plugins = [];
     this.scheduler = new Scheduler();
     this.resources = new Resources();
-    this.removed = new SparseSet(INITIAL_COMPONENT_SPARSE_SETS_COUNT);
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
+  }
+
+  /**
+   * Iterate each plugin & call their `load` function. The call order equals the order of registration.
+   * Throws if a plugins load function returns false.
+   * ---
+   * Call this before running `update` if you have registered any plugin that implements a load function.
+   */
+  async load() {
+    for (const plugin of this.plugins.filter((x) => x.load != undefined)) {
+      const result = await plugin.load!(this);
+      if (!result) {
+        throw new Error(`Load failed for plugin: ${plugin}`);
+      }
+    }
   }
 
   /**
@@ -142,7 +157,6 @@ export class World {
     for (let i = 0; i < components.length; i++) {
       const component_id = get_component_id(components[i]);
       this.storage.get(component_id).remove(entity);
-      this.removed.get_or_insert(component_id, () => new Set()).add(entity);
     }
   }
 
@@ -240,7 +254,18 @@ export class World {
    * @returns
    */
   was_removed(entity: Entity, component: Component) {
-    return this.removed?.get(get_component_id(component))?.has(entity) ?? false;
+    return this.storage.get(get_component_id(component))?.has_removed(entity);
+  }
+
+  /**
+   * Returns component instance if given `component` was removed from given `entity`
+   * since last call to `clear_trackers` else returns undefined.
+   * @param entity
+   * @param component
+   * @returns
+   */
+  get_removed<T extends Component>(entity: Entity, component: T) {
+    return this.storage.get(get_component_id(component))?.get_removed(entity);
   }
 
   /**
@@ -312,9 +337,7 @@ export class World {
     runtime.last_change_tick = this.last_change_tick;
 
     // clear removed trackers
-    for (let i = 0; i < this.removed.length; i++) {
-      this.removed.dense.raw[i].clear();
-    }
+    this.storage.clear_removed_cache();
   }
 
   /**

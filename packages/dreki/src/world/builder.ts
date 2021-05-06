@@ -4,24 +4,27 @@ import type { Components } from "../component/mod";
 import { DEFAULT_ENTITY_CAPACITY } from "../constants";
 import { StageCreationParams, Stages } from "../scheduler/mod";
 import { Stage, StageLabel } from "../scheduler/stage";
-import { System, SystemFunc } from "../scheduler/system";
+import { SystemFunc } from "../scheduler/system";
 import type { Resource, ResourceInstance } from "./resources";
+import type { Plugin } from "./plugin";
 
 /**
  * World builder
  */
 export class WorldBuilder {
-  private stages: StageCreationParams[];
-  private world_systems: Map<string, SystemFunc[]>;
-  private world_resources: ResourceInstance[];
-  private world_components: Components;
-  private options: WorldOptions;
+  private readonly stages: StageCreationParams[];
+  private readonly world_systems: Map<string, SystemFunc[]>;
+  private readonly world_resources: ResourceInstance[];
+  private readonly world_components: Components;
+  private readonly world_plugins: Plugin[];
+  private readonly options: WorldOptions;
 
   constructor() {
     this.stages = [];
     this.world_systems = new Map();
     this.world_resources = [];
     this.world_components = [];
+    this.world_plugins = [];
     this.options = {
       capacity: DEFAULT_ENTITY_CAPACITY,
     };
@@ -33,6 +36,18 @@ export class WorldBuilder {
    */
   with(options: Partial<WorldOptions>) {
     Object.assign(this.options, options);
+    return this;
+  }
+
+  /**
+   * Register plugins to the world.
+   * @param plugins
+   */
+  plugins(...plugins: Plugin[]) {
+    this.world_plugins.push(...plugins);
+    for (const plugin of plugins) {
+      plugin.register(this);
+    }
     return this;
   }
 
@@ -135,6 +150,9 @@ export class WorldBuilder {
     for (const component of this.world_resources) {
       world.add_resource(component);
     }
+
+    // Append plugins
+    world.plugins.push(...this.world_plugins);
 
     return world;
   }

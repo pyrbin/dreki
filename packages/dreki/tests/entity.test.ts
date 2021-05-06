@@ -1,21 +1,22 @@
 import { Entities } from "../src/entity/entities";
-import { Entity } from "../src/entity/mod";
+import { Entity, EntityHandle } from "../src/entity/mod";
 
 test("generation counter", () => {
   const entites = new Entities(1);
   const ITER_COUNT = 8;
   for (let i = 0; i < ITER_COUNT; i++) {
     const entity = entites.allocate();
-    expect(entity.index).toBe(0);
-    expect(entity.generation).toBe(i);
+    const handle = Entity.handle_of(entity);
+    expect(handle.index).toBe(0);
+    expect(handle.generation).toBe(i);
     entites.dispose(entity);
   }
 });
 
 test("entity bits", () => {
-  const entity = new Entity(1000, 434);
-  const bits = entity.bits();
-  const from = Entity.from_bits(bits);
-  expect(from.index).toBe(entity.index);
-  expect(from.generation).toBe(entity.generation);
+  const handle = new EntityHandle(1000, 434);
+  const entity = handle.id();
+  const from = Entity.handle_of(entity);
+  expect(from.index).toBe(handle.index);
+  expect(from.generation).toBe(handle.generation);
 });

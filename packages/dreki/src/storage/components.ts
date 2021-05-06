@@ -1,6 +1,11 @@
 import { Slice } from "@dreki.land/collections";
 import { Entity } from "../entity/mod";
-import { ComponentInstance, ComponentFlags, ComponentTick } from "../component/mod";
+import {
+  ComponentInstance,
+  ComponentFlags,
+  ComponentTick,
+  ComponentInstances,
+} from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { PhantomComponentStorage } from "./phantom";
 
@@ -34,14 +39,23 @@ export type ComponentStorage = {
   is_added(entity: Entity): boolean;
   is_changed(entity: Entity): boolean;
 
-  realloc?(length: number): void;
   register_phantom(reference: PhantomComponentStorage): void;
-  entity_slice(): EntitySlice;
+
   check_ticks(change_tick: ComponentTick): void;
   get_ticks(entity: Entity): readonly [added: ComponentTick, changed: ComponentTick];
 
+  add_removed(entity: Entity, component: ComponentInstance): void;
+  has_removed(entity: Entity): boolean;
+  get_removed(entity: Entity): ComponentInstance | undefined;
+  clear_removed(): void;
+
+  realloc?(length: number): void;
+
+  entity_slice(with_removed?: boolean): EntitySlice;
+
   empty(): boolean;
   readonly length: number;
+  readonly length_with_removed: number;
   readonly capacity: number;
   readonly info: ComponentInfo;
 };
