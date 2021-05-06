@@ -243,7 +243,7 @@ export class World {
    * @returns
    */
   has(entity: Entity, component: Component) {
-    return this.storage.get(get_component_id(component))?.has(entity);
+    return this.storage.get(get_component_id(component))?.has(entity) ?? false;
   }
 
   /**
@@ -254,7 +254,7 @@ export class World {
    * @returns
    */
   was_removed(entity: Entity, component: Component) {
-    return this.storage.get(get_component_id(component))?.has_removed(entity);
+    return this.storage.get(get_component_id(component))?.has_removed(entity) ?? false;
   }
 
   /**

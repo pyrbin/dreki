@@ -44,6 +44,8 @@ export class PhantomComponentStorage implements ComponentStorage {
   }
 
   remove(entity: Entity): boolean {
+    this.entities.delete(entity);
+    this.removed.add(entity);
     return this.reference.remove(entity);
   }
 
@@ -54,9 +56,7 @@ export class PhantomComponentStorage implements ComponentStorage {
   }
 
   get_with_state(entity: Entity) {
-    return this.entities.has(entity)
-      ? this.reference.get_with_state(entity)
-      : (([] as unknown) as ComponentState);
+    return this.entities.has(entity) ? this.reference.get_with_state(entity) : undefined;
   }
 
   set_flag(entity: Entity, fn: (flag: ComponentFlags) => ComponentFlags) {

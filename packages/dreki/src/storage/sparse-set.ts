@@ -240,13 +240,15 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   get_with_state(entity: Entity) {
-    const dense_index = this.sparse.get(entity)!;
-    return [
-      this.dense.raw[dense_index],
-      this.flags.raw[dense_index],
-      this.added[dense_index],
-      this.changed[dense_index],
-    ] as const;
+    const dense_index = this.sparse.get(entity);
+    return dense_index != undefined
+      ? ([
+          this.dense.raw[dense_index],
+          this.flags.raw[dense_index],
+          this.added[dense_index],
+          this.changed[dense_index],
+        ] as const)
+      : undefined;
   }
 
   /**
