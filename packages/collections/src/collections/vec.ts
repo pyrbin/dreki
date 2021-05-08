@@ -104,8 +104,8 @@ export class Vec<T> implements Iterable<T> {
     return this.raw.slice(0, this.len).findIndex(callback, thisArg);
   }
 
-  filter(callback: (element: T, index: number, array: T[]) => boolean, thisArg?: unknown): T[] {
-    return this.raw.slice(0, this.len).filter(callback, thisArg);
+  slice(start?: number, end?: number): T[] {
+    return this.raw.slice(0, this.len).slice(start, end);
   }
 
   map<Mapped extends Array<unknown>>(
@@ -113,6 +113,14 @@ export class Vec<T> implements Iterable<T> {
     thisArg?: unknown,
   ): Mapped {
     return this.raw.slice(0, this.len).map(callback, thisArg) as Mapped;
+  }
+
+  filter(callback: (element: T, index: number, array: T[]) => boolean, thisArg?: unknown): T[] {
+    return this.raw.slice(0, this.len).filter(callback, thisArg);
+  }
+
+  set_raw(array: T[]) {
+    this.data = array;
   }
 
   full(): boolean {
