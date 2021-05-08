@@ -1,5 +1,18 @@
 # dreki
 
+## 0.0.8
+
+### Patch Changes
+
+- 0c8e197: added simple events feature
+
+  - inspired by [events in bevy](https://docs.rs/bevy_app/0.5.0/bevy_app/struct.Events.html)
+
+- Updated dependencies [ebae067]
+- Updated dependencies [48eb3cf]
+  - @dreki.land/shared@0.0.7
+  - @dreki.land/collections@0.0.7
+
 ## 0.0.7
 
 ### Patch Changes

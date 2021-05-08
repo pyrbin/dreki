@@ -1,5 +1,11 @@
 # @dreki.land/shared
 
+## 0.0.7
+
+### Patch Changes
+
+- ebae067: added OmitTupleIfSingle type utils
+
 ## 0.0.6
 
 ### Patch Changes
