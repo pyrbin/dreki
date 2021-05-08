@@ -395,7 +395,7 @@ export class World {
    * @returns
    */
   event_writer<T extends Event>(event: T): EventWriter<T> {
-    return event_internal(event, this, this.events_counts)["send"];
+    return { send: event_internal(event, this, this.events_counts)["send"] };
   }
 
   /**
