@@ -1,5 +1,11 @@
 # dreki
 
+## 0.0.9
+
+### Patch Changes
+
+- f560129: startup stages & more default stages
+
 ## 0.0.8
 
 ### Patch Changes
