@@ -60,8 +60,8 @@ export type Events<T extends Event> = {
 };
 
 export class EventStore<T extends Event = Event> {
-  public back: Vec<EventInstance<T>> = vec(4);
-  public front: Vec<EventInstance<T>> = vec(4);
+  public back: Vec<EventInstance<T>> = vec(64);
+  public front: Vec<EventInstance<T>> = vec(64);
 
   public event_count: number = 0;
 
