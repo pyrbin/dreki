@@ -42,9 +42,9 @@ Entity.of = (handle: EntityHandle) => handle.id();
 Entity.handle_of = (entity: Entity) => EntityHandle.from_id(entity);
 
 /**
- * Retrieves an empty Entity.
+ * Retrieves an invalid Entity.
  */
-Entity.null = INVALID_ENTITY_INDEX as Entity;
+Entity.none = INVALID_ENTITY_INDEX as Entity;
 
 /**
  * Unique handle of an entity

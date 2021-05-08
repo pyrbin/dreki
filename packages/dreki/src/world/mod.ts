@@ -22,7 +22,8 @@ import {
   MAX_ENTITY_CAPACITY,
 } from "../constants";
 import { WorldBuilder } from "./builder";
-import type { Plugin } from "./plugin";
+import type { Plugin, Plugins } from "./plugin";
+import { EventsCount, EventStorage, EventStore } from "./events";
 
 /**
  * Represents the id of a world
@@ -46,10 +47,12 @@ export class World {
   readonly storage: Storage;
   readonly resources: Resources;
   readonly scheduler: Scheduler;
-  readonly plugins: Plugin[];
+  readonly plugins: Plugins;
+  readonly events: EventStorage;
 
   change_tick: number = 1;
   last_change_tick: number = 0;
+  events_counts: EventsCount;
 
   get capacity() {
     return this.entities.capacity;
@@ -73,12 +76,16 @@ export class World {
       storage?.set_changed_tick(entity, this.change_tick);
     });
 
+    this.events = new Map();
+    this.events_counts = new Map();
     this.plugins = [];
     this.scheduler = new Scheduler();
     this.resources = new Resources();
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
+
+    this.update_runtime();
   }
 
   /**
@@ -311,6 +318,11 @@ export class World {
     runtime.current_world = this;
     this.scheduler.run(this);
     this.clear_trackers();
+
+    // update event stores
+    for (const [event, store] of this.events) {
+      store.update();
+    }
   }
 
   /**
@@ -334,10 +346,12 @@ export class World {
   clear_trackers() {
     // increment world last_change tick.
     this.last_change_tick = this.increment_change_tick();
-    runtime.last_change_tick = this.last_change_tick;
 
     // clear removed trackers
     this.storage.clear_removed_cache();
+
+    // update runtime
+    this.update_runtime();
   }
 
   /**
@@ -363,5 +377,13 @@ export class World {
     if (get_component_id(component) !== INVALID_COMPONENT_ID) return false;
     const info = get_component_info_or_register(component);
     return this.storage.get_or_create(info, this.capacity) !== undefined;
+  }
+
+  /**
+   * Update runtime with this World's values.
+   */
+  private update_runtime() {
+    runtime.last_change_tick = this.last_change_tick;
+    runtime.last_event_counts = this.events_counts;
   }
 }

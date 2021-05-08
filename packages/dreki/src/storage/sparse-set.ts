@@ -50,7 +50,7 @@ export class ComponentSparseSet implements ComponentStorage {
 
     // component storage
     this.dense = vec(capacity, allocator);
-    this.entities = vec(capacity, () => Entity.null);
+    this.entities = vec(capacity, () => Entity.none);
     this.sparse = new Map();
 
     // component state

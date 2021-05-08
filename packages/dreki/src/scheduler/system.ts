@@ -1,4 +1,5 @@
 import { MAX_CHANGE_TICK_DELTA } from "../constants";
+import { EventsCount } from "../world/events";
 import { World } from "../world/mod";
 import { runtime } from "../world/runtime";
 import { Runnable } from "./stage";
@@ -9,10 +10,12 @@ export class System implements Runnable {
   readonly func: SystemFunc;
 
   last_change_tick: number;
+  event_counts: EventsCount;
 
   constructor(func: SystemFunc) {
     this.func = func;
     this.last_change_tick = 0;
+    this.event_counts = new Map();
   }
 
   run(world: World) {
@@ -21,6 +24,7 @@ export class System implements Runnable {
 
     // set current last_change_tick runtime context to current systems tick.
     runtime.last_change_tick = this.last_change_tick;
+    runtime.last_event_counts = this.event_counts;
 
     this.func(world);
     this.last_change_tick = last_change_tick;
