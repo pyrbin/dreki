@@ -2,7 +2,7 @@ import type { World } from "../mod";
 import { Schedule } from "./schedule";
 import { Stage, Runnable } from "./stage";
 
-export enum Stages {
+export const enum Stages {
   Update = "update",
 }
 

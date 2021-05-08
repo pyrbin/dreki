@@ -6,7 +6,7 @@ import { has_own_property } from "@dreki.land/shared";
 /**
  * Component type
  */
-export enum ComponentType {
+export const enum ComponentType {
   Tag = "tag",
   Data = "data",
 }
