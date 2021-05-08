@@ -23,7 +23,7 @@ import {
 } from "../constants";
 import { WorldBuilder } from "./builder";
 import type { Plugin, Plugins } from "./plugin";
-import { EventsCount, EventStorage, EventStore } from "./events";
+import { EventsCount, EventStorage, Event, event_internal, EventWriter } from "./events";
 
 /**
  * Represents the id of a world
@@ -377,6 +377,25 @@ export class World {
     if (get_component_id(component) !== INVALID_COMPONENT_ID) return false;
     const info = get_component_info_or_register(component);
     return this.storage.get_or_create(info, this.capacity) !== undefined;
+  }
+
+  /**
+   * Retrieves an event read/write access for given component for this world with
+   * this worlds event counter.
+   * @param event
+   * @returns
+   */
+  event(event: Event) {
+    return event_internal(event, this, this.events_counts);
+  }
+
+  /**
+   * Retrieves an event writer for given event for this world.
+   * @param event
+   * @returns
+   */
+  event_writer<T extends Event>(event: T): EventWriter<T> {
+    return event_internal(event, this, this.events_counts)["send"];
   }
 
   /**

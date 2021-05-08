@@ -1,5 +1,6 @@
 import { vec, Vec } from "@dreki.land/collections";
 import { get_or_insert, OmitTupleIfSingle, record, Type } from "@dreki.land/shared";
+import type { World } from "./mod";
 import { runtime } from "./runtime";
 
 const empty_iterator = [][Symbol.iterator]();
@@ -12,7 +13,9 @@ const empty_iterator = [][Symbol.iterator]();
  * @returns
  */
 export function events<T extends readonly Event[]>(...events: T) {
-  const result = events.map((x) => event_internal(x));
+  const result = events.map((x) =>
+    event_internal(x, runtime.current_world, runtime.last_event_counts),
+  );
   return (result.length > 1 ? result : result[0]) as OmitTupleIfSingle<EventsWrapper<T>>;
 }
 
@@ -20,16 +23,20 @@ type EventsWrapper<T extends readonly Event[]> = {
   [K in keyof T]: T[K] extends Event ? Events<T[K]> : never;
 };
 
-function event_internal<T extends Event>(event: T): Events<T> {
+export function event_internal<T extends Event>(
+  event: T,
+  world: World,
+  reader_counts: EventsCount,
+): Events<T> {
   return {
     send: (data: EventInstance<T>) => {
-      const store = get_or_insert(runtime.current_world.events, event, () => new EventStore<T>());
+      const store = get_or_insert(world.events, event, () => new EventStore<T>());
       store?.push(data);
     },
     iter: (): EventIterable<T> => {
-      const store = get_or_insert(runtime.current_world.events, event, () => new EventStore<T>());
-      const read_count = get_or_insert(runtime.last_event_counts, event, 0);
-      runtime.last_event_counts.set(event, store.event_count);
+      const store = get_or_insert(world.events, event, () => new EventStore<T>());
+      const read_count = get_or_insert(reader_counts, event, 0);
+      reader_counts.set(event, store.event_count);
       return {
         [Symbol.iterator]: () => (store?.drain(read_count) ?? empty_iterator) as EventIterator<T>,
       };
@@ -58,6 +65,10 @@ export type Events<T extends Event> = {
    */
   iter(): EventIterable<T>;
 };
+
+export type EventWriter<T extends Event> = Events<T>["send"];
+
+export type EventReader<T extends Event> = Events<T>["iter"];
 
 export class EventStore<T extends Event = Event> {
   public back: Vec<EventInstance<T>> = vec(64);
