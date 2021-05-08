@@ -24,6 +24,24 @@ export namespace Tuple {
   >;
 }
 
+/**
+ * Omit the array type from T if the tuple only contains a single element.
+ */
+export type OmitTupleIfSingle<
+  T extends readonly unknown[]
+> = T extends Internal.ArrayTwoOrMore<unknown> ? T : T extends { 0: T[number] } ? T[0] : never;
+
+/**
+ * Omit the array type from T if the tuple only contains a single element & convert elements to InstanceTypes.
+ */
+export type OmitTupleIfSingleInstanceTypes<
+  T extends readonly Type[]
+> = T extends Internal.ArrayTwoOrMore<unknown>
+  ? Tuple.InstanceTypes<T>
+  : T extends { 0: T[number] }
+  ? InstanceType<T[0]>
+  : never;
+
 namespace Internal {
   export type ConcatX<T extends readonly (readonly unknown[])[]> = [
     ...T[0],
@@ -51,4 +69,8 @@ namespace Internal {
     ...T[22],
     ...T[24]
   ];
+  export type ArrayTwoOrMore<T> = {
+    0: T;
+    1: T;
+  } & Array<T>;
 }

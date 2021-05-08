@@ -1,5 +1,18 @@
 # dreki
 
+## 0.0.7
+
+### Patch Changes
+
+- 518f7f7: added initial plugin implementation
+- 9189bec: minor bugfixes
+
+  - `get_with_state` correctly returns undefined
+  - `'has'`-functions always returns a boolean
+
+- 86a5a13: improved removed filter
+- 471ca6c: use integers as entity id
+
 ## 0.0.6
 
 ### Patch Changes

@@ -7,3 +7,5 @@ export type Plugin = {
   register: (builder: WorldBuilder) => unknown;
   load?: (world: World) => Promise<boolean>;
 };
+
+export type Plugins = Plugin[];
