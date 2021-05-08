@@ -1,5 +1,13 @@
 # @dreki.land/collections
 
+## 0.0.7
+
+### Patch Changes
+
+- 48eb3cf: added `set_raw` and `slice` to `Vec`
+- Updated dependencies [ebae067]
+  - @dreki.land/shared@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes
