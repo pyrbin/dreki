@@ -7,6 +7,7 @@ import { Stage, StageLabel } from "../scheduler/stage";
 import { SystemFunc } from "../scheduler/system";
 import type { Resource, ResourceInstance } from "./resources";
 import type { Plugin } from "./plugin";
+import { Event, EventStore } from "./events";
 
 /**
  * World builder
@@ -17,6 +18,7 @@ export class WorldBuilder {
   private readonly world_resources: ResourceInstance[];
   private readonly world_components: Components;
   private readonly world_plugins: Plugin[];
+  private readonly world_events: Event[];
   private readonly options: WorldOptions;
 
   constructor() {
@@ -25,6 +27,7 @@ export class WorldBuilder {
     this.world_resources = [];
     this.world_components = [];
     this.world_plugins = [];
+    this.world_events = [];
     this.options = {
       capacity: DEFAULT_ENTITY_CAPACITY,
     };
@@ -75,6 +78,16 @@ export class WorldBuilder {
    */
   components(...components: Components) {
     this.world_components.push(...components);
+    return this;
+  }
+
+  /**
+   * Registers events to the world. This is not needed as events are automatically
+   * registered when it's written/read to.
+   * @param events
+   */
+  events(...events: Event[]) {
+    this.world_events.push(...events);
     return this;
   }
 
@@ -149,6 +162,11 @@ export class WorldBuilder {
     // Adds resources
     for (const component of this.world_resources) {
       world.add_resource(component);
+    }
+
+    // Adds events
+    for (const event of this.world_events) {
+      world.events.set(event, new EventStore<typeof event>());
     }
 
     // Append plugins
