@@ -38,6 +38,20 @@ export type WorldOptions = {
 };
 
 /**
+ * This error is thrown when `World.resource` is called & requested resource doesn't exist in world.
+ * This is being catched in `Stage` & thus doens't stop the `World.update` execution but makes sure that
+ * a system isn't being run when requested resource doesnt exist.
+ * ---
+ * ? not sure if this is something I want to keep, but it would be nice to create dependencies
+ * ? between resources & systems without increasing verbosity.
+ */
+export class ResourceNotFoundError extends Error {
+  constructor(world: World, resource: Resource) {
+    super(`Resource ${resource.name} not found on world (id: ${world.id}).`);
+  }
+}
+
+/**
  * World stores & exposes operations on `entities`, `components` & their respective metadata.
  * It also contains a `Scheduler` to schedule systems acting on the World.
  */
@@ -271,12 +285,27 @@ export class World {
   }
 
   /**
-   * Get `resource` of given type.
+   * Get `resource` of given type. Throws [ResourceNotFoundError] if the resource isn't found.
+   * @see ResourceNotFoundError
    * @param resource
    * @returns
    */
   resource<T extends Resource>(resource: T) {
-    return this.resources.get<T>(resource) as InstanceType<T>;
+    const res = this.resources.get<T>(resource);
+    if (res === undefined) {
+      throw new ResourceNotFoundError(this, resource);
+    } else {
+      return res as InstanceType<T>;
+    }
+  }
+
+  /**
+   * Get `resource` of given type.
+   * @param resource
+   * @returns
+   */
+  has_resource<T extends Resource>(resource: T) {
+    return this.resources.has(resource);
   }
 
   /**

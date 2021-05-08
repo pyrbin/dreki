@@ -1,5 +1,6 @@
 import { MAX_SYSTEMS_PER_STAGE } from "../constants";
 import type { World } from "../mod";
+import { ResourceNotFoundError } from "../world/mod";
 import { System, SystemFunc } from "./system";
 
 export type Runnable = {
@@ -33,7 +34,16 @@ export class Stage implements Runnable {
 
   public run(world: World) {
     for (let i = 0; i < this.systems.length; i++) {
-      this.systems[i].run(world);
+      try {
+        this.systems[i].run(world);
+      } catch (err) {
+        //@see [ResourceNotFoundError]
+        if (err instanceof ResourceNotFoundError) {
+          continue;
+        } else {
+          throw err;
+        }
+      }
     }
 
     this.check_change_tick(world);

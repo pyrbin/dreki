@@ -1,5 +1,5 @@
 import { iter, range } from "@dreki.land/shared";
-import { events, Stage, Stages } from "../src/mod";
+import { events, resources, Stage, Stages } from "../src/mod";
 import { observe } from "../src/query/observe";
 import { StartupStages } from "../src/scheduler/mod";
 import { World } from "../src/world/mod";
@@ -31,7 +31,7 @@ test("resource add/remove", () => {
   world.add_resource(new Time(25));
   expect(world.resource(Time).dt).toBe(25);
   world.delete_resource(Time);
-  expect(world.resource(Time)).toBe(undefined);
+  expect(world.has_resource(Time)).toBe(false);
 });
 
 test("world increase capacity", () => {
@@ -118,4 +118,35 @@ test("startup system only run once", async () => {
   }
 
   expect(world.resource(Dependecy)).toBeDefined();
+});
+
+class ExampleResource {}
+
+test("don't run if resource doesn't exist", () => {
+  let counter = 0;
+  let ran = 0;
+  const world = World.build()
+    .systems(
+      () => {
+        if (counter % 50 == 0) {
+          world.add_resource(ExampleResource);
+        } else {
+          world.delete_resource(ExampleResource);
+        }
+      },
+      () => {
+        resources(ExampleResource);
+        ran++;
+      },
+      () => {
+        counter++;
+      },
+    )
+    .done();
+
+  for (let i of range(200)) {
+    world.update();
+  }
+
+  expect(ran).toBe(200 / 50);
 });
