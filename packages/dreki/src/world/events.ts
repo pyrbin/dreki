@@ -66,9 +66,9 @@ export type Events<T extends Event> = {
   iter(): EventIterable<T>;
 };
 
-export type EventWriter<T extends Event> = Events<T>["send"];
+export type EventWriter<T extends Event> = { send: Events<T>["send"] };
 
-export type EventReader<T extends Event> = Events<T>["iter"];
+export type EventReader<T extends Event> = { iter: Events<T>["iter"] };
 
 export class EventStore<T extends Event = Event> {
   public back: Vec<EventInstance<T>> = vec(64);
