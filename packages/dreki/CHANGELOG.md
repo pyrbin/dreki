@@ -1,5 +1,11 @@
 # dreki
 
+## 0.0.10
+
+### Patch Changes
+
+- f3aadf3: system execution resource guard
+
 ## 0.0.9
 
 ### Patch Changes
