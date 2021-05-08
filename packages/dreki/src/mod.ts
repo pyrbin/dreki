@@ -12,6 +12,7 @@ export { WorldBuilder } from "./world/builder";
 export { Plugin } from "./world/plugin";
 export { resources } from "./world/resources";
 export { events } from "./world/events";
+export { runtime } from "./world/runtime";
 
 // Entity
 export { Entity } from "./entity/mod";

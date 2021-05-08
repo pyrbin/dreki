@@ -1,4 +1,4 @@
-import { Scheduler } from "../src/scheduler/mod";
+import { Scheduler, Stages } from "../src/scheduler/mod";
 import { Stage } from "../src/scheduler/stage";
 import { World } from "../src/world/mod";
 
@@ -35,21 +35,25 @@ test("execution order", () => {
   const last_update_stage = new Stage(last_update);
 
   const scheduler = new Scheduler();
-  scheduler.resolve_stages([
-    {
-      order: "after",
-      params: ["post_update_stage", "last_update_stage", last_update_stage],
-    },
-    {
-      order: "before",
-      params: ["update", "pre_update_stage", pre_update_stage],
-    },
-    {
-      order: "after",
-      params: ["update", "post_update_stage", post_update_stage],
-    },
-    { order: "before", params: ["pre_update_stage", "init", init_stage] },
-  ]);
-  scheduler.schedule.insert_systems("update", [update]);
+  scheduler.resolve_stages(
+    [],
+    [
+      {
+        order: "after",
+        params: ["post_update_stage", "last_update_stage", last_update_stage],
+      },
+      {
+        order: "before",
+        params: [Stages.Update, "pre_update_stage", pre_update_stage],
+      },
+      {
+        order: "after",
+        params: [Stages.Update, "post_update_stage", post_update_stage],
+      },
+      { order: "before", params: ["pre_update_stage", "init", init_stage] },
+    ],
+  );
+
+  scheduler.schedule.insert_systems(Stages.Update, [update]);
   scheduler.run(new World());
 });

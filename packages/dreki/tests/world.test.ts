@@ -1,4 +1,7 @@
+import { iter, range } from "@dreki.land/shared";
+import { events, Stage, Stages } from "../src/mod";
 import { observe } from "../src/query/observe";
+import { StartupStages } from "../src/scheduler/mod";
 import { World } from "../src/world/mod";
 import { Scale, Position, Time, Point, DoublePoint, IsPlayer } from "./utils/data";
 
@@ -72,4 +75,47 @@ test("singleton getter", () => {
   world.despawn(entity);
 
   expect(world.single(IsPlayer)).toBeUndefined();
+});
+
+class DepLoaded {
+  constructor(readonly value: string) {}
+}
+
+class Dependecy {
+  constructor(readonly value: string) {}
+}
+
+test("startup system only run once", async () => {
+  let counter = 0;
+  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+  const world = World.build()
+    .startup_stage_after(
+      StartupStages.PreStartup,
+      "CustomBeforeStartup",
+      new Stage(() => counter++),
+    )
+    .startup_systems(async () => {
+      expect(counter).toBe(1);
+      await sleep(1000);
+      const dep_loaded_events = events(DepLoaded);
+      dep_loaded_events.send({ value: "fetched_string" });
+    })
+    .systems(Stages.Last, (world: World) => {
+      events(DepLoaded).take(1, ([event]) => {
+        world.add_resource(new Dependecy(event.value));
+      });
+    })
+    .done();
+
+  for (const i of range(5000)) {
+    world.update();
+  }
+
+  await sleep(1000);
+
+  for (const i of range(5000)) {
+    world.update();
+  }
+
+  expect(world.resource(Dependecy)).toBeDefined();
 });

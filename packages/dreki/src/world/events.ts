@@ -41,6 +41,15 @@ export function event_internal<T extends Event>(
         [Symbol.iterator]: () => (store?.drain(read_count) ?? empty_iterator) as EventIterator<T>,
       };
     },
+    take: (length: number, fn) => {
+      const store = get_or_insert(world.events, event, () => new EventStore<T>());
+      const read_count = get_or_insert(reader_counts, event, 0);
+      reader_counts.set(event, store.event_count);
+      const events = store.events(read_count).slice(-Math.abs(length));
+      if (events.length > 0) {
+        fn(events);
+      }
+    },
   };
 }
 
@@ -64,11 +73,19 @@ export type Events<T extends Event> = {
    * Individual event instances can only be read once per system.
    */
   iter(): EventIterable<T>;
+  /**
+   * Retrieves a fixed length (or as close as possible) of event instances.
+   * The rest of the events can not be read afterwards.
+   */
+  take(length: number, fn: (events: readonly EventInstance<T>[]) => unknown): void;
 };
 
 export type EventWriter<T extends Event> = { send: Events<T>["send"] };
 
-export type EventReader<T extends Event> = { iter: Events<T>["iter"] };
+export type EventReader<T extends Event> = {
+  take: Events<T>["take"];
+  iter: Events<T>["iter"];
+};
 
 export class EventStore<T extends Event = Event> {
   public back: Vec<EventInstance<T>> = vec(64);
@@ -91,14 +108,18 @@ export class EventStore<T extends Event = Event> {
     this.front.clear();
   }
 
-  public drain(access_count: number): EventIterator<T> {
+  public events(access_count: number) {
     const count = this.event_count - access_count;
     const diff = count - this.front.length;
 
     if (diff <= 0) {
-      return this.front[Symbol.iterator]();
+      return [...this.front];
     }
 
-    return [...this.back.slice(-diff), ...this.front][Symbol.iterator]();
+    return [...this.back.slice(-diff), ...this.front];
+  }
+
+  public drain(access_count: number): EventIterator<T> {
+    return this.events(access_count)[Symbol.iterator]();
   }
 }

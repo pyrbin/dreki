@@ -53,6 +53,7 @@ export class World {
   change_tick: number = 1;
   last_change_tick: number = 0;
   events_counts: EventsCount;
+  should_run_startup: boolean = true;
 
   get capacity() {
     return this.entities.capacity;
@@ -86,21 +87,6 @@ export class World {
     });
 
     this.update_runtime();
-  }
-
-  /**
-   * Iterate each plugin & call their `load` function. The call order equals the order of registration.
-   * Throws if a plugins load function returns false.
-   * ---
-   * Call this before running `update` if you have registered any plugin that implements a load function.
-   */
-  async load() {
-    for (const plugin of this.plugins.filter((x) => x.load != undefined)) {
-      const result = await plugin.load!(this);
-      if (!result) {
-        throw new Error(`Load failed for plugin: ${plugin}`);
-      }
-    }
   }
 
   /**
@@ -316,6 +302,12 @@ export class World {
    */
   update() {
     runtime.current_world = this;
+
+    if (this.should_run_startup) {
+      this.scheduler.run_startup(this);
+      this.should_run_startup = false;
+    }
+
     this.scheduler.run(this);
     this.clear_trackers();
 
