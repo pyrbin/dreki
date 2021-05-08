@@ -1,7 +1,7 @@
 import { insert_at } from "@dreki.land/shared";
 import type { World } from "../mod";
 import type { StageLabel, Stage, Runnable } from "./stage";
-import type { System, SystemFunc } from "./system";
+import type { SystemFunc } from "./system";
 
 export class Schedule implements Runnable {
   readonly stages: Map<StageLabel, Stage>;
