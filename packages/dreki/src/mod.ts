@@ -20,7 +20,7 @@ export { Entity } from "./entity/mod";
 // Scheduler
 export { Stage } from "./scheduler/stage";
 export type { SystemFunc as System } from "./scheduler/system";
-export { Stages } from "./scheduler/mod";
+export { Stages, StartupStages } from "./scheduler/mod";
 
 // Query
 export { query } from "./query/mod";
