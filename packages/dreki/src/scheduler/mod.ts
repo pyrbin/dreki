@@ -2,7 +2,7 @@ import type { World } from "../mod";
 import { Schedule } from "./schedule";
 import { Stage, Runnable } from "./stage";
 
-export const enum Stages {
+export enum Stages {
   First = "First",
   BeforeUpdate = "BeforeUpdate",
   Update = "Update",
@@ -10,7 +10,7 @@ export const enum Stages {
   Last = "Last",
 }
 
-export const enum StartupStages {
+export enum StartupStages {
   PreStartup = "PreStartup",
   Startup = "Startup",
   PostStartup = "PostStartup",
