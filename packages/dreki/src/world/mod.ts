@@ -39,8 +39,8 @@ export type WorldOptions = {
 
 /**
  * This error is thrown when `World.resource` is called & requested resource doesn't exist in world.
- * This is being catched in `Stage` & thus doens't stop the `World.update` execution but makes sure that
- * a system isn't being run when requested resource doesnt exist.
+ * This is being catched in `Stage` & thus doesn't stop the `World.update` execution but makes sure that
+ * a system isn't being run when requested resource doesn't exist.
  * ---
  * ? not sure if this is something I want to keep, but it would be nice to create dependencies
  * ? between resources & systems without increasing verbosity.
@@ -74,13 +74,19 @@ export class World {
   }
 
   /**
-   * Returns a new instance of `WorldBuilder`.
+   * Returns a new instance of {@link WorldBuilder}.
    * @returns
    */
   static build() {
     return new WorldBuilder();
   }
 
+  /**
+   * Create a new World with given options. You should never use this, always create
+   * new worlds using {@link WorldBuilder}.
+   * @see {@link World.build}
+   * @param options
+   */
   constructor(options?: WorldOptions) {
     this.id = runtime.world_id_counter++;
     runtime.worlds.set(this.id, this);
@@ -179,12 +185,15 @@ export class World {
 
   /**
    * Retrieves a single `entity` that has given `component`. Enforces singleton pattern, will throw
-   * if the component storage contains more than 1 entity.
+   * if the component storage contains more than 1 entity, return undefined if no entities exist.
    * @param component
    * @returns
    */
   single<T extends Component>(component: T) {
     const storage = this.storage.get(get_component_id(component));
+    if (storage == undefined) {
+      return undefined;
+    }
     if (storage.length > 1) {
       throw new Error(`There exist more than 0 entity with component ${component.name}!`);
     }
@@ -194,7 +203,7 @@ export class World {
   }
 
   /**
-   * Safe call to `World.single`. Will catch if any error is thrown & return undefined instead.
+   * Safe call to {@link World.single}. Will catch any error thrown & return undefined instead.
    * @param component
    * @returns
    */

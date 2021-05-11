@@ -4,7 +4,7 @@ import type { World } from "../mod";
 import type { Component, Components } from "../component/mod";
 import type { ComponentState } from "../storage/components";
 
-export const enum FilterType {
+export enum FilterType {
   /**
    * Omit type filters will omit their included
    * components in the query result

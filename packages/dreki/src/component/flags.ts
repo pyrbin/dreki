@@ -1,7 +1,7 @@
 /**
  * Component flags
  */
-export const enum ComponentFlags {
+export enum ComponentFlags {
   None = 0,
   Disabled = 1 << 0,
 }
