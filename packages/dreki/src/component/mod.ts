@@ -17,7 +17,7 @@ export type IsTag<T extends Component> = {} extends ExcludeMethods<InstanceType<
   : never;
 
 /**
- * A component type
+ * A component type.
  */
 export type Component<T extends record = record> = T extends typeof Entity ? never : Type<T>;
 export type Components = Component[];
