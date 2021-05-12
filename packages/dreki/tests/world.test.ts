@@ -150,3 +150,29 @@ test("don't run if resource doesn't exist", () => {
 
   expect(ran).toBe(200 / 50);
 });
+
+test("commands test", () => {
+  const world = World.build().done();
+  const player = world.spawn();
+  const player2 = world.spawn();
+
+  const pos = world
+    .commands(player)
+    .add(Position, Scale)
+    .disable(Scale)
+    .remove(Position)
+    .add(Position)
+    .get(Position);
+
+  world.commands(player2).despawn();
+
+  expect(world.has(player, Position)).toBe(true);
+  expect(world.has(player, Scale)).toBe(true);
+  expect(world.enabled(player, Scale)).toBe(false);
+  expect(world.disabled(player, Scale)).toBe(true);
+  expect(world.get(player, Position)).toBe(pos);
+
+  world.commands(player).enable(Scale);
+  expect(world.disabled(player, Scale)).toBe(false);
+  expect(world.enabled(player, Scale)).toBe(true);
+});

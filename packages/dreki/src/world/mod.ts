@@ -24,6 +24,7 @@ import {
 import { WorldBuilder } from "./builder";
 import type { Plugin, Plugins } from "./plugin";
 import { EventsCount, EventStorage, Event, event_internal, EventWriter } from "./events";
+import { Commands } from "./commands";
 
 /**
  * Represents the id of a world
@@ -146,6 +147,22 @@ export class World {
   }
 
   /**
+   *  Retrieves a {@link Commands} instance for give `entity`
+   *
+   * @example
+   *  ```typescript
+   *  world.commands(player)
+   *       .add(Velocity)
+   *       .remove(StaticTag);
+   *  ```
+   * @param entity
+   * @returns
+   */
+  commands(entity: Entity) {
+    return new Commands(entity, this);
+  }
+
+  /**
    * Add `components` to the given `entity`. If a `component` constructor is supplied
    * an instance will be created using `new`.
    * @param entity
@@ -227,6 +244,16 @@ export class World {
   }
 
   /**
+   * Return true If disable flag is not set for given `component` for given `entity`.
+   * @param entity
+   * @param component
+   * @returns
+   */
+  enabled<T extends Component>(entity: Entity, component: T) {
+    return !this.disabled(entity, component);
+  }
+
+  /**
    * Disables a `component` for a given `entity`.
    * Disabled components are still able to be fetched via `World.get` and
    * be mutated / used etc. However will be ignored in queries.
@@ -250,6 +277,20 @@ export class World {
     this.storage
       .get(get_component_id(component))
       ?.set_flag(entity, (flag) => bitflags.insert(flag, ComponentFlags.Disabled));
+  }
+
+  /**
+   * Return true If disable flag is set for given `component` for given `entity`.
+   * @param entity
+   * @param component
+   * @returns
+   */
+  disabled<T extends Component>(entity: Entity, component: T) {
+    return bitflags.contains(
+      this.storage.get(get_component_id(component))?.get_with_state(entity)?.[1] ??
+        ComponentFlags.None,
+      ComponentFlags.Disabled,
+    );
   }
 
   /**
