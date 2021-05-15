@@ -56,8 +56,8 @@ export function event_internal<T extends Event>(
 export type Event<T extends record = record> = Type<T>;
 export type EventInstance<T extends Event> = InstanceType<T>;
 
-export type EventIterable<T extends Event> = Readonly<Iterable<EventInstance<T>>>;
-export type EventIterator<T extends Event> = Readonly<Iterator<EventInstance<T>>>;
+export type EventIterable<T extends Event> = Iterable<Readonly<EventInstance<T>>>;
+export type EventIterator<T extends Event> = Iterator<Readonly<EventInstance<T>>>;
 
 export type EventsCount = Map<Event, number>;
 export type EventStorage = Map<Event, EventStore>;
