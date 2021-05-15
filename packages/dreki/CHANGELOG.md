@@ -1,5 +1,13 @@
 # dreki
 
+## 0.0.11
+
+### Patch Changes
+
+- 95cbe1b: fixed `World.single` undefined storage error
+- 9f3e0b7: bugfix `World.register` correctly creates storage for component
+- b686282: added commands feature
+
 ## 0.0.10
 
 ### Patch Changes
