@@ -1,12 +1,9 @@
 import { bitflags, get_instance_and_type } from "@dreki.land/shared";
-import { SparseSet } from "@dreki.land/collections";
 import {
   Component,
   ComponentBundle,
   ComponentFlags,
-  ComponentId,
   Components,
-  INVALID_COMPONENT_ID,
   ReadonlyComponents,
 } from "../component/mod";
 import { get_component_id, get_component_info_or_register } from "../component/register";
@@ -22,7 +19,7 @@ import {
   MAX_ENTITY_CAPACITY,
 } from "../constants";
 import { WorldBuilder } from "./builder";
-import type { Plugin, Plugins } from "./plugin";
+import type { Plugins } from "./plugin";
 import { EventsCount, EventStorage, Event, event_internal, EventWriter } from "./events";
 import { Commands } from "./commands";
 
@@ -164,13 +161,15 @@ export class World {
 
   /**
    * Add `components` to the given `entity`. If a `component` constructor is supplied
-   * an instance will be created using `new`.
+   * an instance will be created using `new`. If entity already have given
+   * component(s), the operation will be ignored.
    * @param entity
    * @param components
    */
   add(entity: Entity, ...components: ComponentBundle) {
     for (let i = 0; i < components.length; i++) {
       const [instance, type] = get_instance_and_type(components[i]);
+      if (this.has(entity, type)) continue;
       const info = get_component_info_or_register(type);
       this.storage
         .get_or_create(info, this.capacity)
@@ -439,15 +438,17 @@ export class World {
   }
 
   /**
-   * Register a `component` to the world. Returns true if successful or
-   * false if the `component` has already been registered.
+   * Register a `component` to the world. Returns true if successfully registered or
+   * if it was already registered.
    * @param component
    * @returns
    */
   register(component: Component) {
-    if (get_component_id(component) !== INVALID_COMPONENT_ID) return false;
-    const info = get_component_info_or_register(component);
-    return this.storage.get_or_create(info, this.capacity) !== undefined;
+    const storage = this.storage.get_or_create(
+      get_component_info_or_register(component),
+      this.capacity,
+    );
+    return storage !== undefined;
   }
 
   /**
