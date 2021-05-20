@@ -5,7 +5,6 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.16.0
-      '@swc/jest': ^0.1.2
       '@types/jest': ^26.0.23
       '@typescript-eslint/eslint-plugin': ^4.24.0
       '@typescript-eslint/parser': ^4.24.0
@@ -17,7 +16,6 @@ importers:
       typescript: ^4.3.0-beta
     devDependencies:
       '@changesets/cli': 2.16.0
-      '@swc/jest': 0.1.2
       '@types/jest': 26.0.23
       '@typescript-eslint/eslint-plugin': 4.24.0_6ace569057b14e169493df2a32d67b4a
       '@typescript-eslint/parser': 4.24.0_f80391cd40a01dc1c60b342b62ce527b
@@ -818,17 +816,6 @@ packages:
       read-yaml-file: 1.1.0
     dev: true
 
-  /@napi-rs/triples/1.0.2:
-    resolution: {integrity: sha512-EL3SiX43m9poFSnhDx4d4fn9SSaqyO2rHsCNhETi9bWPmjXK3uPJ0QpPFtx39FEdHcz1vJmsiW41kqc0AgvtzQ==}
-    dev: true
-
-  /@node-rs/helper/1.1.0:
-    resolution: {integrity: sha512-r43YnnrY5JNzDuXJdW3sBJrKzvejvFmFWbiItUEoBJsaPzOIWFMhXB7i5j4c9EMXcFfxveF4l7hT+rLmwtjrVQ==}
-    dependencies:
-      '@napi-rs/triples': 1.0.2
-      tslib: 2.2.0
-    dev: true
-
   /@nodelib/fs.scandir/2.1.4:
     resolution: {integrity: sha512-33g3pMJk3bg5nXbL/+CY6I2eJDzZAni49PfJnL5fghPTggPvBd/pFNSgJsdAgWptuFu7qq/ERvOYFlhvsLTCKA==}
     engines: {node: '>= 8'}
@@ -892,101 +879,6 @@ packages:
     transitivePeerDependencies:
       - rollup
       - supports-color
-    dev: true
-
-  /@swc/core-android-arm64/1.2.57:
-    resolution: {integrity: sha512-RgWnbTZNHZQSSwsKI74Av/gjprP6DEyiXgjz00rU2m0umsXR6EaahLMim4M6o2C/lOdYHJiiVG1/fl42qzFwsQ==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [android]
-    dev: true
-    optional: true
-
-  /@swc/core-darwin-arm64/1.2.57:
-    resolution: {integrity: sha512-ZO+Fawsh/WTs6HacDhWtU2dkFK9y9voMFeCbLmWBrUKNL/htpyKv9UBTN+jNMw1tadJGzXX/OaeTOZRQFjOpcA==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [darwin]
-    dev: true
-    optional: true
-
-  /@swc/core-darwin-x64/1.2.57:
-    resolution: {integrity: sha512-JM/Kntr23r4J5aM+obxtlbS872Oef4q202bqopClu+5lpllv7516/ubeCJ2wspgTQhrfnH4Y55PMStpYFsxg1g==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [darwin]
-    dev: true
-    optional: true
-
-  /@swc/core-linux-arm-gnueabihf/1.2.57:
-    resolution: {integrity: sha512-EzH86V5dBZAlnLZ4WMUotqdbgCZewp+MmWZYlfjbm6aaPTLrVQIuNewBenY9sP3TbPq4Ui3b9ujvh5L37+fWNg==}
-    engines: {node: '>=10'}
-    cpu: [arm]
-    os: [linux]
-    dev: true
-    optional: true
-
-  /@swc/core-linux-arm64-gnu/1.2.57:
-    resolution: {integrity: sha512-mSUWiztG7kejaX6KUwMjKjgKj6+qBfip1eU8R6FxsSaLnFM5OQPER4n7PLDg3YCg4sWVj5hXJ7u/bG2l/iOsxg==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [linux]
-    dev: true
-    optional: true
-
-  /@swc/core-linux-x64-gnu/1.2.57:
-    resolution: {integrity: sha512-zgHrLSaOaQkRPs29c+1450lEn2jBivzRMIKmafbRtgVjiU8k9/eBMP3jRLRZsV1iIIH/13gDqeGgi1DXdluTPQ==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-    dev: true
-    optional: true
-
-  /@swc/core-linux-x64-musl/1.2.57:
-    resolution: {integrity: sha512-13c7g2WmBecl13UQPFsPhkUIkNaTPKXIM1+WqKLAeStV7umsHmwjWMVqaG2dwlKji4A+4fLWW/jmladrwswkUw==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-    dev: true
-    optional: true
-
-  /@swc/core-win32-ia32-msvc/1.2.57:
-    resolution: {integrity: sha512-Cwbw/0yovQ0NF76sAnvX24p5bwzF0iAXutdcta4wWzsovMhAe5+qJxgIyJOu057gv7RLR4XZx51Hi13sXWxJQQ==}
-    engines: {node: '>=10'}
-    cpu: [ia32]
-    os: [win32]
-    dev: true
-    optional: true
-
-  /@swc/core-win32-x64-msvc/1.2.57:
-    resolution: {integrity: sha512-lPOtU1xDeF8GO+cejnyGDFXVBjVUs0DX+++6O4qSj1nbhYo64R6Ui/HpmQFaXqFq3AWCAj10GyGNrerJjNQhGg==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [win32]
-    dev: true
-    optional: true
-
-  /@swc/core/1.2.57:
-    resolution: {integrity: sha512-sO6jXmBaiP33L/y6thxa1Dx8WS0Ttg19qsr3SB9/LIovydCSNTsYuLElftZWeq8QoDBwcYCDsiYIPnfZzsRiMg==}
-    engines: {node: '>=10'}
-    dependencies:
-      '@node-rs/helper': 1.1.0
-    optionalDependencies:
-      '@swc/core-android-arm64': 1.2.57
-      '@swc/core-darwin-arm64': 1.2.57
-      '@swc/core-darwin-x64': 1.2.57
-      '@swc/core-linux-arm-gnueabihf': 1.2.57
-      '@swc/core-linux-arm64-gnu': 1.2.57
-      '@swc/core-linux-x64-gnu': 1.2.57
-      '@swc/core-linux-x64-musl': 1.2.57
-      '@swc/core-win32-ia32-msvc': 1.2.57
-      '@swc/core-win32-x64-msvc': 1.2.57
-    dev: true
-
-  /@swc/jest/0.1.2:
-    resolution: {integrity: sha512-14ju3wkSsTeKFivYzH222j4/y5UQWY5Wk9fOvPit6wyuZNyo4fP6AVYWwVzogmqQNe06IMs+aPJGQ3FbErRZjQ==}
-    dependencies:
-      '@swc/core': 1.2.57
     dev: true
 
   /@tailwindcss/jit/0.1.18_postcss@8.2.15+tailwindcss@2.1.2:
