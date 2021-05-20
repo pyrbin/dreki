@@ -1,6 +1,5 @@
-import { iter, range } from "@dreki.land/shared";
-import { events, resources, Stage, Stages } from "../src/mod";
-import { observe } from "../src/query/observe";
+import { range } from "@dreki.land/shared";
+import { Entity, events, query, res, Stage, Stages } from "../src/mod";
 import { StartupStages } from "../src/scheduler/mod";
 import { World } from "../src/world/mod";
 import { Scale, Position, Time, Point, DoublePoint, IsPlayer } from "./utils/data";
@@ -28,10 +27,10 @@ test("despawn entity", () => {
 
 test("resource add/remove", () => {
   const world = new World({ capacity: 10_000 });
-  world.add_resource(new Time(25));
+  world.addResource(new Time(25));
   expect(world.resource(Time).dt).toBe(25);
-  world.delete_resource(Time);
-  expect(world.has_resource(Time)).toBe(false);
+  world.deleteResource(Time);
+  expect(world.hasResource(Time)).toBe(false);
 });
 
 test("world increase capacity", () => {
@@ -40,33 +39,32 @@ test("world increase capacity", () => {
 
   expect(world.capacity == 5).toBe(true);
   const entities = world.batch(10, DoublePoint);
-  const last = entities[entities.length - 1];
   expect(world.capacity >= 10).toBe(true);
   expect(
     world.get(entities[Math.floor(Math.random() * (entities.length - 1))], DoublePoint),
   ).toBeInstanceOf(Point);
 
-  const new_entity = world.spawn(new Point(200));
-  expect(world.get(new_entity, Point)).toBeDefined();
-  expect(world.get(new_entity, Point).x).toBe(200);
-  world.remove(new_entity, Point);
-  expect(world.get(new_entity, Point)).toBeUndefined();
-  const new_entity2 = world.spawn(new Point(999));
-  expect(world.get(new_entity2, Point)).toBeDefined();
-  expect(world.get(new_entity2, Point).x).toBe(999);
+  const newEntity = world.spawn(new Point(200));
+  expect(world.get(newEntity, Point)).toBeDefined();
+  expect(world.get(newEntity, Point).x).toBe(200);
+  world.remove(newEntity, Point);
+  expect(world.get(newEntity, Point)).toBeUndefined();
+  const newEntity2 = world.spawn(new Point(999));
+  expect(world.get(newEntity2, Point)).toBeDefined();
+  expect(world.get(newEntity2, Point).x).toBe(999);
 });
 
 test("singleton getter", () => {
   const world = new World({ capacity: 5 });
   const entity = world.spawn(Position, Scale);
 
-  const new_pos = new Position(20, 20);
-  const player_entity = world.spawn(new_pos, Scale, IsPlayer);
+  const newPos = new Position(20, 20);
+  const playerEntity = world.spawn(newPos, Scale, IsPlayer);
 
   const player = world.single(IsPlayer);
 
-  expect(player).toBe(player_entity);
-  expect(world.get(player, Position)).toBe(new_pos);
+  expect(player).toBe(playerEntity);
+  expect(world.get(player, Position)).toBe(newPos);
 
   world.add(entity, IsPlayer);
   expect(() => world.single(IsPlayer)).toThrowError();
@@ -89,31 +87,27 @@ test("startup system only run once", async () => {
   let counter = 0;
   const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
   const world = World.build()
-    .startup_stage_after(
-      StartupStages.PreStartup,
-      "CustomBeforeStartup",
-      new Stage(() => counter++),
-    )
-    .startup_systems(async () => {
+    .startupStageAfter(StartupStages.PreStartup, "CustomBeforeStartup", new Stage(() => counter++))
+    .startupSystems(async () => {
       expect(counter).toBe(1);
       await sleep(1000);
-      const dep_loaded_events = events(DepLoaded);
-      dep_loaded_events.send({ value: "fetched_string" });
+      const depLoadedEvents = events(DepLoaded);
+      depLoadedEvents.emit({ value: "fetched_string" });
     })
     .systems(Stages.Last, (world: World) => {
       events(DepLoaded).take(1, ([event]) => {
-        world.add_resource(new Dependecy(event.value));
+        world.addResource(new Dependecy(event.value));
       });
     })
     .done();
 
-  for (const i of range(5000)) {
+  for (const _ of range(5000)) {
     world.update();
   }
 
   await sleep(1000);
 
-  for (const i of range(5000)) {
+  for (const _ of range(5000)) {
     world.update();
   }
 
@@ -129,13 +123,13 @@ test("don't run if resource doesn't exist", () => {
     .systems(
       () => {
         if (counter % 50 == 0) {
-          world.add_resource(ExampleResource);
+          world.addResource(ExampleResource);
         } else {
-          world.delete_resource(ExampleResource);
+          world.deleteResource(ExampleResource);
         }
       },
       () => {
-        resources(ExampleResource);
+        res(ExampleResource);
         ran++;
       },
       () => {
@@ -144,7 +138,7 @@ test("don't run if resource doesn't exist", () => {
     )
     .done();
 
-  for (let i of range(200)) {
+  for (const _ of range(200)) {
     world.update();
   }
 

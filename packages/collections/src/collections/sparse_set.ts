@@ -1,4 +1,4 @@
-import { Allocator, use_allocator } from "@dreki.land/shared";
+import { Allocator, useAllocator } from "@dreki.land/shared";
 import { vec, Vec } from "./vec";
 
 export class SparseSet<I extends number, T> implements Iterable<T> {
@@ -34,23 +34,23 @@ export class SparseSet<I extends number, T> implements Iterable<T> {
       : undefined;
   }
 
-  get_unchecked(index: I) {
+  getUnchecked(index: I) {
     return this.dense.raw[this.sparse.raw[index]!];
   }
 
-  get_or_insert(index: I, allocator: Allocator<T>) {
-    return this.get(index) ?? this.insert(index, use_allocator(allocator));
+  getOrInsert(index: I, allocator: Allocator<T>) {
+    return this.get(index) ?? this.insert(index, useAllocator(allocator));
   }
 
   remove(index: I) {
-    const dense_index = this.sparse.raw[index]!;
-    if (dense_index === undefined) return;
-    const is_last = dense_index === this.dense.length - 1;
-    const value = this.dense.swap_remove(dense_index);
-    this.indices.swap_remove(dense_index);
-    if (!is_last) {
-      const swapped_index = this.indices.raw[dense_index];
-      this.sparse.raw[swapped_index] = dense_index;
+    const denseIndex = this.sparse.raw[index]!;
+    if (denseIndex === undefined) return;
+    const isLast = denseIndex === this.dense.length - 1;
+    const value = this.dense.swapRemove(denseIndex);
+    this.indices.swapRemove(denseIndex);
+    if (!isLast) {
+      const swappedIndex = this.indices.raw[denseIndex];
+      this.sparse.raw[swappedIndex] = denseIndex;
     }
     this.sparse.raw[index] = undefined;
     return value;

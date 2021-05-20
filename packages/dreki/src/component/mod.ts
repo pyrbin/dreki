@@ -1,17 +1,19 @@
-import type { Type, record, ExcludeMethods } from "@dreki.land/shared";
-import { Entity } from "../entity/mod";
+import type { Type, ExcludeMethods, record } from "@dreki.land/shared";
 
 export const INVALID_COMPONENT_ID = -1;
 
 export type ComponentId = number;
+
 export type ComponentMask = number;
 
 export * from "./flags";
+
 export * from "./ticks";
 
 /**
  * Type-guard if component type is a tag.
  */
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type IsTag<T extends Component> = {} extends ExcludeMethods<InstanceType<T>>
   ? InstanceType<T>
   : never;
@@ -19,7 +21,7 @@ export type IsTag<T extends Component> = {} extends ExcludeMethods<InstanceType<
 /**
  * A component type.
  */
-export type Component<T extends record = record> = T extends typeof Entity ? never : Type<T>;
+export type Component<T extends record = record> = Type<T>;
 export type Components = Component[];
 export type ReadonlyComponents = readonly Component[];
 

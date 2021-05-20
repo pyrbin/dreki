@@ -1,4 +1,4 @@
-import { has_own_property, record } from "@dreki.land/shared";
+import { hasOwnProperty, record } from "@dreki.land/shared";
 import type { Entity } from "../entity/mod";
 import type { World } from "../mod";
 import type { Component, Components } from "../component/mod";
@@ -29,11 +29,12 @@ export const FILTER_TYPE_KEY = "$$__dreki__filter";
  * @param predicate
  * @returns
  */
-export function impl_filter<T extends readonly FilterType[]>(
+export function createFilter<T extends readonly FilterType[]>(
   identifier: string,
   predicate: Predicate<T>,
   ...types: T
 ) {
+  // set filter types
   const filterTypes = types?.reduce(
     (map, type) => ({
       ...map,
@@ -52,32 +53,57 @@ export function impl_filter<T extends readonly FilterType[]>(
     } as Filter<T, U>;
   };
 
+  // set identifier
   filter.identifier = identifier;
 
   return filter;
 }
 
+/**
+ * A component filter
+ */
 export type ComponentFilter = Filter<[]>;
 
+/**
+ * An entity filter
+ */
 export type EntityFilter = Filter<[FilterType.Entity]>;
 
-export function is_filter(target: record | undefined): target is Filter {
+/**
+ * Returns true if target is a filter
+ * @param target
+ * @returns
+ */
+export function isFilter(target: unknown | undefined): target is Filter {
   if (target === undefined) return false;
-  return has_own_property(target, FILTER_TYPE_KEY);
+  return hasOwnProperty(target as record, FILTER_TYPE_KEY);
 }
 
-export function is_omit_filter(
+/**
+ * Returns true if target is an omit filter
+ * @param target
+ * @returns
+ */
+export function isOmitFilter(
   target: record | undefined,
 ): target is Filter & { [FilterType.Omit]: true } {
   if (target === undefined) return false;
   return Boolean(target[FilterType.Omit]);
 }
 
-export function is_entity_filter(target: record | undefined): target is EntityFilter {
+/**
+ * Returns true if target is an entity filter
+ * @param target
+ * @returns
+ */
+export function isEntityFilter(target: record | undefined): target is EntityFilter {
   if (target === undefined) return false;
   return Boolean(target[FilterType.Entity]);
 }
 
+/**
+ * A filter type
+ */
 export type Filter<
   T extends readonly FilterType[] = [],
   U extends readonly Component[] = readonly Component[]
@@ -96,4 +122,4 @@ type FilterParams<T extends readonly FilterType[] = []> = {
   [K in T[number]]: true;
 } extends { [FilterType.Entity]: true }
   ? [world: World, entity: Entity, type: Component]
-  : [world: World, entity: Entity, comp_with_state: ComponentState];
+  : [world: World, entity: Entity, compWithState: ComponentState];

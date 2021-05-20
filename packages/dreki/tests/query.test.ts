@@ -23,8 +23,8 @@ beforeEach(() => {
 
 test("simple non-filter query", () => {
   const positions = query(Position, Scale);
-  const spawn_count = 20;
-  const update_count = 60;
+  const spawnCount = 20;
+  const updateCount = 60;
   const world = World.build()
     .systems(() => {
       for (const [p, s] of positions) {
@@ -36,43 +36,43 @@ test("simple non-filter query", () => {
     .components(Position1D)
     .done();
 
-  for (let i = 0; i < spawn_count; i++) {
+  for (let i = 0; i < spawnCount; i++) {
     world.spawn(new Position(24, 24), Scale);
   }
 
-  for (let i = 0; i < update_count; i++) {
+  for (let i = 0; i < updateCount; i++) {
     world.update();
   }
 
-  expect(called).toBe(spawn_count * update_count);
-  const component = world.get(Entity(spawn_count - 1, 0), Scale);
+  expect(called).toBe(spawnCount * updateCount);
+  const component = world.get(Entity(spawnCount - 1, 0), Scale);
 
-  expect(component.a).toBe(update_count * 24);
+  expect(component.a).toBe(updateCount * 24);
 });
 
 test("not filter", () => {
-  const non_pos = 5;
-  const with_pos = 15;
+  const nonPos = 5;
+  const withPos = 15;
   const count = 55;
   const ok = not(Position);
-  const not_positions = query(ok, Scale);
+  const notPositions = query(ok, Scale);
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
-      for (const [scale] of not_positions) {
+      for (const _ of notPositions) {
         called++;
       }
     })
     .done();
 
-  world.batch(non_pos, Scale);
-  world.batch(with_pos, Scale, Position);
+  world.batch(nonPos, Scale);
+  world.batch(withPos, Scale, Position);
 
-  for (const i of range(0, count)) {
+  for (const _ of range(0, count)) {
     world.update();
   }
 
-  expect(called).toBe(non_pos * count);
+  expect(called).toBe(nonPos * count);
 });
 
 test("changed filter same system", () => {
@@ -84,7 +84,7 @@ test("changed filter same system", () => {
     .with({ capacity: 50 })
     .components(Position1D)
     .systems(() => {
-      for (const [pos, scale] of react) {
+      for (const _ of react) {
         called++;
       }
       for (const [pos] of mutate) {
@@ -114,7 +114,7 @@ test("changed filter seperate systems", () => {
     .components(Position1D)
     .systems(
       () => {
-        for (const [pos, scale] of react) {
+        for (const _ of react) {
           called++;
         }
       },
@@ -138,17 +138,17 @@ test("changed filter seperate systems", () => {
 });
 
 test("added filter", () => {
-  const added_pos = query(added(Position), Scale);
-  const added_scale = query(added(Scale));
+  const addedPos = query(added(Position), Scale);
+  const addedScale = query(added(Scale));
 
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
-      for (const data of added_pos) {
+      for (const data of addedPos) {
         called++;
         expect(data.length).toBe(2);
       }
-      for (const data of added_scale) {
+      for (const data of addedScale) {
         called += 200;
         expect(data.length).toBe(1);
       }
@@ -167,12 +167,12 @@ test("added filter", () => {
 
 test("removed filter", () => {
   const pos = new Position(200, 200);
-  const added_pos = query(removed(Position), Scale);
+  const addedPos = query(removed(Position), Scale);
   const world = World.build()
     .with({ capacity: 50 })
     .components(Position1D)
     .systems(() => {
-      for (const data of added_pos) {
+      for (const data of addedPos) {
         expect(data.length).toBe(2);
         expect(data[0]).toEqual(pos);
         called++;
@@ -200,11 +200,11 @@ test("removed filter", () => {
 });
 
 test("disabled filter", () => {
-  const added_pos = query(disabled(Position), Scale);
+  const addedPos = query(disabled(Position), Scale);
   const world = World.build()
     .with({ capacity: 1 })
     .systems(() => {
-      for (const data of added_pos) {
+      for (const data of addedPos) {
         expect(data.length).toBe(2);
         called++;
       }
@@ -224,22 +224,22 @@ test("disabled filter", () => {
 
 test("observed selection", () => {
   const length = 10;
-  const changed_query = query(changed(Position), Scale);
-  const observed_query = query(observe(Position), Scale);
+  const changedQuery = query(changed(Position), Scale);
+  const observedQuery = query(observe(Position), Scale);
 
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
-      for (const [observed_pos] of observed_query) {
-        observed_pos.x += 1;
+      for (const [observedPos] of observedQuery) {
+        observedPos.x += 1;
       }
-      for (const data of changed_query) {
+      for (const _ of changedQuery) {
         called++;
       }
-      for (const [observed_pos] of observed_query) {
-        observed_pos.x += 1;
+      for (const [observedPos] of observedQuery) {
+        observedPos.x += 1;
       }
-      for (const data of changed_query) {
+      for (const _ of changedQuery) {
         called++;
       }
     })
@@ -247,7 +247,7 @@ test("observed selection", () => {
 
   const entity = world.spawn(Position, Scale);
 
-  for (const i of range(length)) {
+  for (const _ of range(length)) {
     world.update();
   }
 
@@ -256,11 +256,11 @@ test("observed selection", () => {
 });
 
 test("tag component query", () => {
-  const tag_query = query(Tag, added(IsPlayer), Scale);
+  const tagQuery = query(Tag, added(IsPlayer), Scale);
   const world = World.build()
     .with({ capacity: 50 })
     .systems(() => {
-      for (const tag of tag_query) {
+      for (const tag of tagQuery) {
         expect(tag.length).toBe(1);
         called++;
       }
@@ -276,11 +276,11 @@ test("tag component query", () => {
 
 test("entity parameter", () => {
   const ITER = 2000;
-  const query_with_entity = query(Entity, Position);
+  const queryWithEntity = query(Entity, Position);
   const world = World.build()
     .with({ capacity: ITER })
     .systems((w) => {
-      for (const result of query_with_entity) {
+      for (const result of queryWithEntity) {
         const [entity, pos] = result;
         expect(result.length).toBe(2);
         expect(typeof result[0]).toBe("number");
@@ -304,50 +304,50 @@ test("entity parameter", () => {
 });
 
 test("super component batch", () => {
-  const point3d_count = 500;
-  const double_point_count = 333;
-  const point4d_count = 1000;
+  const point3dCount = 500;
+  const doublePointCount = 333;
+  const point4dCount = 1000;
 
-  const total_from_point2d = point4d_count + point3d_count;
-  const total_count = double_point_count + total_from_point2d;
+  const totalFromPoint2d = point4dCount + point3dCount;
+  const totalCount = doublePointCount + totalFromPoint2d;
 
-  const all_point4d = query(Point4D);
-  const all_point3d = query(Point3D, not(Point4D));
-  const all_point2d = query(Point2D);
-  const all_points = query(Point);
+  const allPoint4d = query(Point4D);
+  const allPoint3d = query(Point3D, not(Point4D));
+  const allPoint2d = query(Point2D);
+  const allPoints = query(Point);
 
   const world = World.build()
     .systems(() => {
       called = 0;
-      for (const [data] of all_point4d) {
+      for (const [data] of allPoint4d) {
         expect(data).toBeInstanceOf(Point4D);
         called++;
       }
-      expect(called).toBe(point4d_count);
+      expect(called).toBe(point4dCount);
       called = 0;
-      for (const [data] of all_point3d) {
+      for (const [data] of allPoint3d) {
         expect(data).toBeInstanceOf(Point3D);
         called++;
       }
-      expect(called).toBe(point3d_count);
+      expect(called).toBe(point3dCount);
       called = 0;
-      for (const [data] of all_point2d) {
+      for (const [data] of allPoint2d) {
         expect(data instanceof Point4D || data instanceof Point3D).toBe(true);
         called++;
       }
-      expect(called).toBe(total_from_point2d);
+      expect(called).toBe(totalFromPoint2d);
       called = 0;
-      for (const [data] of all_points) {
+      for (const [data] of allPoints) {
         expect(data).toBeInstanceOf(Point);
         called++;
       }
-      expect(called).toBe(total_count);
+      expect(called).toBe(totalCount);
     })
     .done();
 
-  world.batch(point4d_count, Point4D);
-  world.batch(point3d_count, Point3D);
-  world.batch(double_point_count, DoublePoint);
+  world.batch(point4dCount, Point4D);
+  world.batch(point3dCount, Point3D);
+  world.batch(doublePointCount, DoublePoint);
 
   world.register(Point);
   world.register(Point2D);

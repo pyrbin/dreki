@@ -6,7 +6,7 @@ test("generation counter", () => {
   const ITER_COUNT = 8;
   for (let i = 0; i < ITER_COUNT; i++) {
     const entity = entites.allocate();
-    const handle = Entity.handle_of(entity);
+    const handle = Entity.handleOf(entity);
     expect(handle.index).toBe(0);
     expect(handle.generation).toBe(i);
     entites.dispose(entity);
@@ -16,7 +16,7 @@ test("generation counter", () => {
 test("entity bits", () => {
   const handle = new EntityHandle(1000, 434);
   const entity = handle.id();
-  const from = Entity.handle_of(entity);
+  const from = Entity.handleOf(entity);
   expect(from.index).toBe(handle.index);
   expect(from.generation).toBe(handle.generation);
 });

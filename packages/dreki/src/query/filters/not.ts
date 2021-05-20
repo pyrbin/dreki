@@ -1,4 +1,4 @@
-import { FilterType, impl_filter } from "../filter";
+import { FilterType, createFilter } from "../filter";
 
 /**
  * Filter that only includes `entities` that DOESN'T have the given components.
@@ -12,7 +12,7 @@ import { FilterType, impl_filter } from "../filter";
  * const grounded = query(Position, not(Flying))
  * ```
  */
-export const not = impl_filter(
+export const not = createFilter(
   "not",
   (world, entity, component) => {
     return !world.has(entity, component);

@@ -1,6 +1,6 @@
 export class Position {
-  public x: number = 0;
-  public y: number = 0;
+  public x = 0;
+  public y = 0;
 }
 
 export class Speed {
@@ -8,5 +8,5 @@ export class Speed {
 }
 
 export class Time {
-  dt: number = 1;
+  dt = 1;
 }

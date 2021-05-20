@@ -1,5 +1,4 @@
 import type { ComponentId } from "../component/mod";
-import { SYMBOL_PREFIX } from "../constants";
 import type { Entity } from "../entity/mod";
 
 type Proxy = InstanceType<typeof Proxy>;
@@ -11,18 +10,20 @@ const isValidProxyTarget = (obj: unknown) =>
 type ProxyCallback = (entity: Entity, id: ComponentId) => unknown;
 
 /**
- * ProxyObserver
+ * A proxy observer
  */
 export class ProxyObserver {
-  private proxies: WeakMap<Target, Proxy>;
+  #proxies: WeakMap<Target, Proxy>;
+  #callback: ProxyCallback;
 
   /**
    * Creates a ProxyObserver with given `callback` function.
    * The `callback` will be called whenever a tracked object is being mutated.
    * @param callback
    */
-  constructor(private readonly callback: ProxyCallback) {
-    this.proxies = new Map();
+  constructor(callback: ProxyCallback) {
+    this.#proxies = new Map();
+    this.#callback = callback;
   }
 
   /**
@@ -33,10 +34,10 @@ export class ProxyObserver {
    * @param component
    * @returns
    */
-  public track<T extends Target>(target: T, entity: Entity, id: ComponentId): T {
-    const { proxies } = this;
+  track<T extends Target>(target: T, entity: Entity, id: ComponentId): T {
+    const proxies = this.#proxies;
     const track = this.track.bind(this);
-    const callback = this.callback.bind(this);
+    const callback = this.#callback.bind(this);
 
     let proxy = proxies.get(target);
 
@@ -50,15 +51,19 @@ export class ProxyObserver {
           : value;
       },
       set(target: Target, key: PropertyKey, value: unknown) {
-        const has_key = Object.hasOwnProperty.call(target, key);
-        const old_value = target[key as any];
-        const new_value = Reflect.set(target, key, value);
+        const hasKey = Object.hasOwnProperty.call(target, key);
 
-        if (!has_key || value !== old_value) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        const oldValue = target[key];
+
+        const newValue = Reflect.set(target, key, value);
+
+        if (!hasKey || value !== oldValue) {
           callback(entity, id);
         }
 
-        return new_value;
+        return newValue;
       },
       deleteProperty(target: Target, key: PropertyKey) {
         callback(entity, id);

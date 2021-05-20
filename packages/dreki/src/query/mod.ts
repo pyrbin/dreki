@@ -1,12 +1,8 @@
-import { array_of, Tuple, Type } from "@dreki.land/shared";
+import { arrayOf, Tuple, Type } from "@dreki.land/shared";
 import { World } from "../world/mod";
-import { runtime } from "../world/runtime";
+import { Runtime } from "../world/runtime";
 import type { Component, ComponentInstance, IsTag } from "../component/mod";
-import {
-  ComponentInfo,
-  ComponentType,
-  get_component_info_or_register,
-} from "../component/register";
+import { ComponentInfo, ComponentType, getComponentInfoOrRegister } from "../component/register";
 import { Entity } from "../entity/mod";
 import type { EntitySlice, ComponentStorage } from "../storage/components";
 import {
@@ -14,11 +10,11 @@ import {
   EntityFilter,
   Filter,
   FilterType,
-  is_entity_filter,
-  is_filter,
-  is_omit_filter,
+  isEntityFilter,
+  isFilter,
+  isOmitFilter,
 } from "./filter";
-import { is_observe, Observe } from "./observe";
+import { isObserve, Observe } from "./observe";
 import { removed } from "./filters/removed";
 
 /**
@@ -37,10 +33,12 @@ export function query<T extends QueryParams>(...params: T): Query<T> {
  * todo: look in to why & fix it so we don't have to use `Omit`
  */
 type QueryParams = readonly (Omit<Filter, "predicate"> | Component | Observe | typeof Entity)[];
-
 type QueryIter<T extends QueryParams> = Iterable<QueryResult<T>>;
-
 type QueryResult<T extends QueryParams> = Tuple.Flatten<UnwrapQueryParams<T>>;
+
+/**
+ * Maps QueryParams to correct result types.
+ */
 type UnwrapQueryParams<T extends QueryParams> = Tuple.Flatten<
   {
     [K in keyof T]: T[K] extends Omit<Filter, "predicate">
@@ -56,39 +54,41 @@ type UnwrapQueryParams<T extends QueryParams> = Tuple.Flatten<
       : never;
   }
 >;
+
 type UnwrapQueryParamInstance<T extends Type> = T extends typeof Entity
   ? Entity
   : T extends IsTag<T>
   ? []
   : InstanceType<T>;
 
-type FetchInfo = {
+type QueryParamFetchInfo = {
   info: ComponentInfo | undefined;
-  fetch_entity: boolean;
-  ignore_has_check: boolean;
+  fetchEntity: boolean;
+  ignoreHasCheck: boolean;
   filter?: ComponentFilter | EntityFilter;
   observe?: boolean;
-  fetcher_fn?: (world: World, entity: Entity) => ComponentInstance;
+  fetchFn?: (world: World, entity: Entity) => ComponentInstance;
 };
 
 class Query<T extends QueryParams> implements QueryIter<T> {
-  private read_index = -1;
-  private result_index = 0;
-  private query_length = 0;
+  #readIndex = -1;
+  #resultIndex = 0;
+  #queryLength = 0;
 
-  private entities: EntitySlice | undefined;
-  private readonly fetch_info: readonly FetchInfo[];
-  private readonly entity_filters: readonly EntityFilter[];
-  private readonly component_info: readonly ComponentInfo[];
-  private readonly components: (ComponentStorage | undefined)[];
-  private readonly result_array: (ComponentInstance | Entity)[];
-  private world: World | undefined;
+  #entities: EntitySlice | undefined;
+  #world: World | undefined;
 
-  private has_removed_filter: boolean = false;
-  private has_non_entity_filters: boolean = false;
-  private current_entity_removed = false;
+  #hasRemovedFilter = false;
+  #hasNonEntityFilters = false;
+  #currentEntityRemoved = false;
 
-  private readonly result: IteratorResult<QueryResult<T>> = ({
+  readonly #fetchInfo: readonly QueryParamFetchInfo[];
+  readonly #entityFilters: readonly EntityFilter[];
+  readonly #componentInfo: readonly ComponentInfo[];
+  readonly #components: (ComponentStorage | undefined)[];
+  readonly #resultArray: (ComponentInstance | Entity)[];
+
+  readonly #result: IteratorResult<QueryResult<T>> = ({
     value: (null as unknown) as IteratorResult<QueryResult<T>>,
     done: false,
   } as unknown) as IteratorResult<QueryResult<T>>;
@@ -99,56 +99,56 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    */
   constructor(...params: T) {
     // parse & flatten params
-    this.fetch_info = params.flatMap((x) =>
-      is_filter(x)
-        ? x.include.map((y) => unpack_fetch_info(y, x))
-        : unpack_fetch_info(x as Component | Observe),
+    this.#fetchInfo = params.flatMap((x) =>
+      isFilter(x)
+        ? x.include.map((y) => unpackQueryParamFetchInfo(y, x))
+        : unpackQueryParamFetchInfo(x as Component | Observe),
     );
 
-    // get entity_filters
-    this.entity_filters = this.fetch_info
-      .filter((x) => is_entity_filter(x.filter))
+    // get entityFilters
+    this.#entityFilters = this.#fetchInfo
+      .filter((x) => isEntityFilter(x.filter))
       .map((x) => x.filter) as EntityFilter[];
 
     // get fetch info of non-omit fetches
-    const non_omit_fetches = this.fetch_info.filter((x) => !is_omit_filter(x.filter));
+    const nonOmitFetches = this.#fetchInfo.filter((x) => !isOmitFilter(x.filter));
 
     // get length of fetches that will put in result array (QueryResult<T>)
-    const include_in_result = this.fetch_info.filter(
+    const includeInResult = this.#fetchInfo.filter(
       (x) =>
-        !is_omit_filter(x.filter) &&
-        (x.fetch_entity || (x.info as ComponentInfo).type !== ComponentType.Tag),
+        !isOmitFilter(x.filter) &&
+        (x.fetchEntity || (x.info as ComponentInfo).type !== ComponentType.Tag),
     ).length;
 
-    this.result_array = array_of(include_in_result);
-    this.components = array_of(non_omit_fetches.length);
+    this.#resultArray = arrayOf(includeInResult);
+    this.#components = arrayOf(nonOmitFetches.length);
 
-    // This is only needed for `Storage.shortest_slice_of`
+    // This is only needed for `Storage.shortestSliceOf`
     // Ignore `Entity` references.
-    this.component_info = Array.from(
-      non_omit_fetches.filter((x) => !x.fetch_entity).map((x) => x.info as ComponentInfo),
+    this.#componentInfo = Array.from(
+      nonOmitFetches.filter((x) => !x.fetchEntity).map((x) => x.info as ComponentInfo),
     );
 
     // clear iterator-related properties
-    this.entities = undefined;
-    this.result.value = this.result_array;
-    this.read_index = -1;
-    this.query_length = 0;
+    this.#entities = undefined;
+    this.#result.value = this.#resultArray;
+    this.#readIndex = -1;
+    this.#queryLength = 0;
 
     // Calculate if this query contains any remove filters
-    this.has_removed_filter =
-      this.entity_filters.filter((x) => x.identifier === removed.identifier).length > 0;
+    this.#hasRemovedFilter =
+      this.#entityFilters.filter((x) => x.identifier === removed.identifier).length > 0;
 
     // Calculate if this query contains any non-entity filters
-    this.has_non_entity_filters =
-      this.fetch_info.filter((x) => x.filter && !is_entity_filter(x.filter)).length > 0;
+    this.#hasNonEntityFilters =
+      this.#fetchInfo.filter((x) => x.filter && !isEntityFilter(x.filter)).length > 0;
 
     /**
-     * In final fetch_info only includes non-omit fetches
+     * In final fetchInfo only includes non-omit fetches
      * and remove filters from per-entity fetches.
      */
-    this.fetch_info = non_omit_fetches.map((x) => {
-      if (x.filter && is_entity_filter(x.filter)) delete x.filter;
+    this.#fetchInfo = nonOmitFetches.map((x) => {
+      if (x.filter && isEntityFilter(x.filter)) delete x.filter;
       return x;
     });
   }
@@ -158,26 +158,28 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param world
    * @returns
    */
-  public iter_for(world: World): Iterator<QueryResult<T>> {
-    if (world !== undefined && (world !== this.world || this.entities === undefined)) {
+  public iterFor(world: World): Iterator<QueryResult<T>> {
+    if (world !== undefined && (world !== this.#world || this.#entities === undefined)) {
       // Only find & cache component sparse sets if world has changed since last iteration
-      this.world = world;
-      for (let i = 0; i < this.fetch_info.length; i++) {
-        const info = this.fetch_info[i].info;
-        this.components[i] = !this.fetch_info[i].fetch_entity
-          ? this.world?.storage.get(info!.id)
+      this.#world = world;
+      for (let i = 0; i < this.#fetchInfo.length; i++) {
+        const info = this.#fetchInfo[i].info;
+        this.#components[i] = !this.#fetchInfo[i].fetchEntity
+          ? this.#world?.storage.get(info!.id)
           : undefined;
       }
     }
 
-    this.read_index = -1;
+    this.#readIndex = -1;
 
-    this.entities = this.has_removed_filter
-      ? this.world?.storage.shortest_slice_of_with_removed(...this.component_info)
-      : this.world?.storage.shortest_slice_of(...this.component_info);
+    // get entites from component storage with lowest count of entities.
+    // if this entity has a `removed` filter, also include removed entities
+    this.#entities = this.#hasRemovedFilter
+      ? this.#world?.storage.shortestSliceOfWithRemoved(...this.#componentInfo)
+      : this.#world?.storage.shortestSliceOf(...this.#componentInfo);
 
-    this.query_length = this.entities?.length ?? 0;
-    this.result.done = false;
+    this.#queryLength = this.#entities?.length ?? 0;
+    this.#result.done = false;
 
     return {
       next: () => this.execute(),
@@ -189,15 +191,15 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param entity
    * @returns
    */
-  private check_entity_filter(entity: Entity) {
-    for (let i = 0; i < this.entity_filters.length; i++) {
-      const filter = this.entity_filters[i];
+  private checkEntityFilter(entity: Entity) {
+    for (let i = 0; i < this.#entityFilters.length; i++) {
+      const filter = this.#entityFilters[i];
       for (let j = 0; j < filter.include.length; j++) {
-        if (!filter.predicate(this.world!, entity, filter.include[j])) return false;
+        if (!filter.predicate(this.#world!, entity, filter.include[j])) return false;
       }
-      // If this filter is an removed filter, check if entity exists & update current_entity_removed
+      // If this filter is an removed filter, check if entity exists & update currentEntityRemoved
       if (filter.identifier === removed.identifier) {
-        this.current_entity_removed = !this.world!.exists(entity);
+        this.#currentEntityRemoved = !this.#world!.exists(entity);
       }
     }
     return true;
@@ -208,67 +210,78 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @returns
    */
   private execute(): IteratorResult<QueryResult<T>> {
-    root: while (this.read_index < this.query_length - 1) {
-      this.result_index = 0;
-      this.current_entity_removed = false;
+    // main iteration loop
+    root: while (this.#readIndex < this.#queryLength - 1) {
+      this.#resultIndex = 0;
+      this.#currentEntityRemoved = false;
 
-      const entity = this.entities!.get(++this.read_index);
+      // get current entity.
+      const entity = this.#entities!.get(++this.#readIndex);
 
-      if (!this.check_entity_filter(entity)) continue root;
+      // if entity filters doesn't pass, goto next.
+      if (!this.checkEntityFilter(entity)) continue root;
 
-      // if entity was removed & has other filters, we can be sure this entity won't pass
-      if (this.current_entity_removed && this.has_non_entity_filters) continue root;
+      // if entity was removed & has other filters, we can be sure this entity won't pass.
+      if (this.#currentEntityRemoved && this.#hasNonEntityFilters) continue root;
 
-      for (let i = 0; i < this.fetch_info.length; i++) {
-        const fetch = this.fetch_info[i];
+      // iterate each fetch info
+      for (let i = 0; i < this.#fetchInfo.length; i++) {
+        const fetch = this.#fetchInfo[i];
 
-        if (fetch.fetch_entity) {
-          this.result_array[this.result_index++] = entity;
+        if (fetch.fetchEntity) {
+          // if this fetch should fetch the entity, just add the entity & continue.
+          this.#resultArray[this.#resultIndex++] = entity;
           continue;
         }
 
-        const is_tag = fetch.info!.type === ComponentType.Tag;
-        const storage = this.components[i]!;
+        const isTag = fetch.info!.type === ComponentType.Tag;
+        const storage = this.#components[i]!;
 
-        if (this.current_entity_removed) {
+        if (this.#currentEntityRemoved) {
+          // if current entity is removed, look for component in the removed cache/storage.
           // todo: move this logic to seperate Query iterator for `removed` queries
-          const component = storage.get_removed(entity);
+          const component = storage.getRemoved(entity);
           if (component == undefined) continue root;
-          if (!is_tag) this.result_array[this.result_index++] = component;
+          if (!isTag) this.#resultArray[this.#resultIndex++] = component;
           continue;
         }
 
-        const state = storage.get_with_state(entity);
+        const state = storage.getWithState(entity);
 
         if (!state) {
-          if (fetch.ignore_has_check && fetch.fetcher_fn) {
-            const component = fetch.fetcher_fn(this.world!, entity);
+          // if fetch has ignoreHasCheck & a custom fetch function then the entity
+          // could still be valid for the query even if is doesn't have the component.
+          if (fetch.ignoreHasCheck && fetch.fetchFn) {
+            const component = fetch.fetchFn(this.#world!, entity);
             if (component == undefined) continue root;
-            if (!is_tag) this.result_array[this.result_index++] = component;
+            if (!isTag) this.#resultArray[this.#resultIndex++] = component;
             continue;
           }
           continue root;
         }
 
+        // Check component filter predicate if a filter exists.
         if (
           fetch.filter &&
-          !(fetch.filter as ComponentFilter).predicate(this.world!, entity, state)
+          !(fetch.filter as ComponentFilter).predicate(this.#world!, entity, state)
         ) {
           continue root;
         }
 
-        if (is_tag) continue;
+        // Don't add tag component to result array.
+        if (isTag) continue;
 
-        this.result_array[this.result_index++] = fetch.fetcher_fn
-          ? fetch.fetcher_fn(this.world!, entity)
+        // Add component or instance or result from custom fetch- function if it exists.
+        this.#resultArray[this.#resultIndex++] = fetch.fetchFn
+          ? fetch.fetchFn(this.#world!, entity)
           : state[0];
       }
 
-      return this.result;
+      return this.#result;
     }
 
-    this.result.done = true;
-    return this.result;
+    this.#result.done = true;
+    return this.#result;
   }
 
   /**
@@ -277,39 +290,45 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @returns
    */
   [Symbol.iterator](): Iterator<QueryResult<T>> {
-    return this.iter_for(runtime.current_world);
+    return this.iterFor(Runtime.currentWorld);
   }
 }
 
-function unpack_fetch_info(
-  fetch: Component | Observe | typeof Entity,
+/**
+ * Unpack a [QueryParamFetchInfo] from a query param.
+ * @param param
+ * @param filter
+ * @returns
+ */
+function unpackQueryParamFetchInfo(
+  param: Component | Observe | typeof Entity,
   filter?: ComponentFilter | EntityFilter,
-): FetchInfo {
-  const observe = is_observe(fetch);
-  const component = is_observe(fetch) ? fetch.include : fetch;
-  const is_entity = component === Entity;
-  const info = !is_entity ? get_component_info_or_register(component as Component) : undefined;
+): QueryParamFetchInfo {
+  const observe = isObserve(param);
+  const component = isObserve(param) ? param.include : param;
+  const isEntity = component === Entity;
+  const info = !isEntity ? getComponentInfoOrRegister(component as Component) : undefined;
 
-  let ignore_has_check = false;
-  let fetcher_fn: FetchInfo["fetcher_fn"] = undefined;
+  let ignoreHasCheck = false;
+  let fetchFn: QueryParamFetchInfo["fetchFn"] = undefined;
 
-  if (!is_entity && info && observe) {
-    fetcher_fn = (world: World, entity: Entity) =>
-      world.storage.get_observed(entity, info) as ComponentInstance;
+  if (!isEntity && info && observe) {
+    fetchFn = (world: World, entity: Entity) =>
+      world.storage.getObserved(entity, info) as ComponentInstance;
   }
 
-  if (!is_entity && info && filter && filter.identifier === removed.identifier) {
-    ignore_has_check = true;
-    fetcher_fn = (world: World, entity: Entity) =>
-      world.storage.get(info.id).get_removed(entity) as ComponentInstance;
+  if (!isEntity && info && filter && filter.identifier === removed.identifier) {
+    ignoreHasCheck = true;
+    fetchFn = (world: World, entity: Entity) =>
+      world.storage.get(info.id).getRemoved(entity) as ComponentInstance;
   }
 
   return {
-    info: !is_entity ? get_component_info_or_register(component as Component) : undefined,
-    fetch_entity: is_entity,
+    info: !isEntity ? getComponentInfoOrRegister(component as Component) : undefined,
+    fetchEntity: isEntity,
     filter,
     observe,
-    fetcher_fn,
-    ignore_has_check,
+    fetchFn,
+    ignoreHasCheck,
   };
 }

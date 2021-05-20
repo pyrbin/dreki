@@ -1,10 +1,10 @@
-import { is_changed } from "../../component/mod";
-import { impl_filter } from "../filter";
+import { isChanged } from "../../component/mod";
+import { createFilter } from "../filter";
 
 /**
  * Filter that retrieves the given components if they have been changed
  * since the start of the frame. To trigger a change you have to use the selector
- * `observe` in a query or get an observed component with `World.get_observed`.
+ * `observe` in a query or get an observed component with `World.getObserved`.
  *
  * @example
  * ```ts
@@ -20,4 +20,4 @@ import { impl_filter } from "../filter";
  * }
  * ```
  */
-export const changed = impl_filter("changed", (world, entity, [, , ...ticks]) => is_changed(ticks));
+export const changed = createFilter("changed", (world, entity, [, , ...ticks]) => isChanged(ticks));

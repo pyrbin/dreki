@@ -40,7 +40,7 @@
 - 518f7f7: added initial plugin implementation
 - 9189bec: minor bugfixes
 
-  - `get_with_state` correctly returns undefined
+  - `getWithState` correctly returns undefined
   - `'has'`-functions always returns a boolean
 
 - 86a5a13: improved removed filter
