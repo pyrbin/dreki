@@ -1,6 +1,6 @@
 import type { record, Type } from "@dreki.land/shared";
 import { OmitTupleIfSingleInstanceTypes } from "@dreki.land/shared";
-import { Runtime } from "./Runtime";
+import { Runtime } from "./runtime";
 
 export type Resource<T extends record = record> = Type<T>;
 

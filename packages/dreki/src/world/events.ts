@@ -1,7 +1,7 @@
 import { vec, Vec } from "@dreki.land/collections";
 import { getOrInsert, OmitTupleIfSingle, record, Type } from "@dreki.land/shared";
 import type { World } from "./mod";
-import { Runtime } from "./Runtime";
+import { Runtime } from "./runtime";
 
 const emptyIterator = [][Symbol.iterator]();
 

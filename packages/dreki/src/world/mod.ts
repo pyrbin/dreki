@@ -11,7 +11,7 @@ import type { Entity } from "../entity/mod";
 import { Entities } from "../entity/entities";
 import type { Resource } from "./resources";
 import { Storage } from "../storage/mod";
-import { Runtime } from "./Runtime";
+import { Runtime } from "./runtime";
 import { Scheduler } from "../scheduler/mod";
 import {
   DEFAULT_ENTITY_CAPACITY,
