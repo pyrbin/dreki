@@ -10,7 +10,7 @@
     "release": "pnpm build && pnpm publish --filter=\"@dreki.land/*\" --filter=\"dreki\""
   },
   "engines": {
-    "node": ">=15.12.0",
+    "node": ">=14",
     "pnpm": ">=6"
   },
   "devDependencies": {
