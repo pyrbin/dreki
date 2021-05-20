@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm build --filter=\"@dreki.land/*\" --filter=\"dreki\"",
-    "lint": "pnpm check-format",
+    "lint": "pnpm check-format && eslint \"packages/**\"",
     "changeset": "changeset",
     "format": "prettier --write packages/ --config .prettierrc --ignore-path .gitignore",
     "check-format": "prettier --check packages/ --config .prettierrc --ignore-path .gitignore",
@@ -17,10 +17,13 @@
     "@changesets/cli": "^2.16.0",
     "@swc/jest": "^0.1.2",
     "@types/jest": "^26.0.20",
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
+    "eslint": "^7.26.0",
     "jest": "~26.6.3",
     "prettier": "^2.2.1",
     "rimraf": "^3.0.2",
-    "typescript": "next"
+    "typescript": "^4.3.0"
   },
   "jest": {
     "verbose": true,
