@@ -1,5 +1,19 @@
 # dreki
 
+## 0.0.12
+
+### Patch Changes
+
+- 33666ce: cleanup & overall refactoring
+
+  - switched from `snake_case` to `camelCase`
+  - replaced `@swc/jest` with `esbuild-runner`
+  - use [private field hash `#` prefix](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) (still not sure about this)
+
+- Updated dependencies [33666ce]
+  - @dreki.land/collections@0.0.8
+  - @dreki.land/shared@0.0.8
+
 ## 0.0.11
 
 ### Patch Changes
