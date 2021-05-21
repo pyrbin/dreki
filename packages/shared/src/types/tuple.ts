@@ -37,13 +37,12 @@ export type OmitTupleIfSingle<T extends readonly unknown[]> = T extends ArrayTwo
 /**
  * Omit the array type from T if the tuple only contains a single element & convert elements to InstanceTypes.
  */
-export type OmitTupleIfSingleInstanceTypes<
-  T extends readonly Type[]
-> = T extends ArrayTwoOrMore<unknown>
-  ? Tuple.InstanceTypes<T>
-  : T extends { 0: T[number] }
-  ? InstanceType<T[0]>
-  : never;
+export type OmitTupleIfSingleInstanceTypes<T extends readonly Type[]> =
+  T extends ArrayTwoOrMore<unknown>
+    ? Tuple.InstanceTypes<T>
+    : T extends { 0: T[number] }
+    ? InstanceType<T[0]>
+    : never;
 
 type ConcatX<T extends readonly (readonly unknown[])[]> = [
   ...T[0],

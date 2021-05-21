@@ -16,9 +16,9 @@ export function vec<T = number>(capacity = 1, allocator: Allocator<T> = undefine
 export class Vec<T> implements Iterable<T> {
   #data: T[];
   #len = 0;
-  #allocator: Allocator<T> = undefined
+  #allocator: Allocator<T> = undefined;
 
-  constructor(capacity = 1,  allocator: Allocator<T> = undefined) {
+  constructor(capacity = 1, allocator: Allocator<T> = undefined) {
     this.#data = arrayOf(capacity, allocator);
     this.#len = 0;
     this.#allocator = allocator;
@@ -43,7 +43,7 @@ export class Vec<T> implements Iterable<T> {
 
   insert(index: number, element: T): void {
     if (index >= this.capacity) this.realloc();
-    insertAt((this as unknown) as Array<T>, index, element);
+    insertAt(this as unknown as Array<T>, index, element);
   }
 
   remove(index: number) {

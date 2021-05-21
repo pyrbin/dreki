@@ -41,7 +41,7 @@ export class ProxyObserver {
 
     let proxy = proxies.get(target);
 
-    if (proxy) return (proxy as unknown) as T;
+    if (proxy) return proxy as unknown as T;
 
     const handlers = {
       get(target: Target, key: PropertyKey) {

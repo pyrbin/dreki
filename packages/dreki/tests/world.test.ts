@@ -1,5 +1,5 @@
 import { range } from "@dreki.land/shared";
-import { Entity, events, query, res, Stage, Stages } from "../src/mod";
+import { events, res, Stage, Stages } from "../src/mod";
 import { StartupStages } from "../src/scheduler/mod";
 import { World } from "../src/world/mod";
 import { Scale, Position, Time, Point, DoublePoint, IsPlayer } from "./utils/data";

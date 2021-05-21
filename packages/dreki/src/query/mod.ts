@@ -88,10 +88,10 @@ class Query<T extends QueryParams> implements QueryIter<T> {
   readonly #components: (ComponentStorage | undefined)[];
   readonly #resultArray: (ComponentInstance | Entity)[];
 
-  readonly #result: IteratorResult<QueryResult<T>> = ({
-    value: (null as unknown) as IteratorResult<QueryResult<T>>,
+  readonly #result: IteratorResult<QueryResult<T>> = {
+    value: null as unknown as IteratorResult<QueryResult<T>>,
     done: false,
-  } as unknown) as IteratorResult<QueryResult<T>>;
+  } as unknown as IteratorResult<QueryResult<T>>;
 
   /**
    * Create a query of given query parameters.

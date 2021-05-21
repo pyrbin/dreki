@@ -37,7 +37,7 @@ export function getComponentInfoOrRegister(component: Component) {
  * @returns
  */
 export function getComponentId(component: Component): ComponentId {
-  return hasOwnProperty((component as unknown) as record, COMPONENT_ID_PROP_KEY)
+  return hasOwnProperty(component as unknown as record, COMPONENT_ID_PROP_KEY)
     ? ((component as ComponentWithId)[COMPONENT_ID_PROP_KEY] as ComponentId) ?? INVALID_COMPONENT_ID
     : INVALID_COMPONENT_ID;
 }

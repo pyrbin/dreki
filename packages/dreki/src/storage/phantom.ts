@@ -51,7 +51,7 @@ export class PhantomComponentStorage implements ComponentStorage {
   get(entity: Entity): ComponentInstance {
     return this.entities.has(entity)
       ? this.#parent.get(entity)
-      : ((undefined as unknown) as ComponentInstance);
+      : (undefined as unknown as ComponentInstance);
   }
 
   getWithState(entity: Entity) {

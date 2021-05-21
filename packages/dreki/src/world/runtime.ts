@@ -14,7 +14,7 @@ export abstract class Runtime {
   static worldIdCounter: WorldId = 0;
 
   // execution context
-  static currentWorld: World = (undefined as unknown) as World;
+  static currentWorld: World = undefined as unknown as World;
   static lastChangeTick = 0;
   static lastEventCounts: EventsCounter = new Map();
 

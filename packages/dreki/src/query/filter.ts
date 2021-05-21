@@ -106,7 +106,7 @@ export function isEntityFilter(target: record | undefined): target is EntityFilt
  */
 export type Filter<
   T extends readonly FilterType[] = [],
-  U extends readonly Component[] = readonly Component[]
+  U extends readonly Component[] = readonly Component[],
 > = {
   include: U;
   identifier: string;

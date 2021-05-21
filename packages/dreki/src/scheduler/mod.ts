@@ -38,9 +38,9 @@ export const StartupStages = labels(DEFAULT_STAGES_PREFIX, {
  * @returns
  */
 export function labels<T extends record>(prefix: string, stages: T) {
-  return (Object.fromEntries(
+  return Object.fromEntries(
     Object.entries(stages).map(([k, v]) => [k, `${prefix}::${v}`]),
-  ) as unknown) as T;
+  ) as unknown as T;
 }
 
 export type StageCreationParams = {
