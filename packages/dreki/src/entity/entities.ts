@@ -7,8 +7,8 @@ export type EntityMeta = {
 };
 
 /**
-* A storage of entities
-*/
+ * A storage of entities
+ */
 export class Entities {
   #metadata: Vec<EntityMeta>;
 
@@ -18,8 +18,8 @@ export class Entities {
    */
   #freelist: Vec<number>;
   #len: number;
-  
-  #onRealloc?: (length: number) => unknown
+
+  #onRealloc?: (length: number) => unknown;
 
   /**
    * Create new entity storage with given capacity. Will call `onRealloc` when reallocations occurs.
