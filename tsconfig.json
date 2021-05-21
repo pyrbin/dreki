@@ -11,6 +11,8 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
     "lib": ["esnext", "dom"],
     "strict": true
   }

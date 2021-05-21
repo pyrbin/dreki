@@ -1,13 +1,13 @@
-import { FilterType, impl_filter } from "../filter";
+import { FilterType, createFilter } from "../filter";
 
 /**
  * Filter that only includes `entities` where given components have been removed
  * since the start of the frame.
  */
-export const removed = impl_filter(
+export const removed = createFilter(
   "removed",
   (world, entity, component) => {
-    return world.was_removed(entity, component);
+    return world.wasRemoved(entity, component);
   },
   FilterType.Entity,
 );

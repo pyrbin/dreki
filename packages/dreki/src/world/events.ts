@@ -1,21 +1,19 @@
 import { vec, Vec } from "@dreki.land/collections";
-import { get_or_insert, OmitTupleIfSingle, record, Type } from "@dreki.land/shared";
+import { getOrInsert, OmitTupleIfSingle, record, Type } from "@dreki.land/shared";
 import type { World } from "./mod";
-import { runtime } from "./runtime";
+import { Runtime } from "./runtime";
 
-const empty_iterator = [][Symbol.iterator]();
+const emptyIterator = [][Symbol.iterator]();
 
 /**
  * Create a read/write access for given Event(s) in active world.
- * @note This should only be used inside systems as it uses the [runtime]
+ * @note This should only be used inside systems as it uses the [Runtime]
  * context to fetch current world & system metadata.
  * @param event
  * @returns
  */
 export function events<T extends readonly Event[]>(...events: T) {
-  const result = events.map((x) =>
-    event_internal(x, runtime.current_world, runtime.last_event_counts),
-  );
+  const result = events.map((x) => eventInternal(x, Runtime.currentWorld, Runtime.lastEventCounts));
   return (result.length > 1 ? result : result[0]) as OmitTupleIfSingle<EventsWrapper<T>>;
 }
 
@@ -23,29 +21,29 @@ type EventsWrapper<T extends readonly Event[]> = {
   [K in keyof T]: T[K] extends Event ? Events<T[K]> : never;
 };
 
-export function event_internal<T extends Event>(
+export function eventInternal<T extends Event>(
   event: T,
   world: World,
-  reader_counts: EventsCount,
+  readerCounts: EventsCounter,
 ): Events<T> {
   return {
-    send: (data: EventInstance<T>) => {
-      const store = get_or_insert(world.events, event, () => new EventStore<T>());
+    emit: (data: EventInstance<T>) => {
+      const store = getOrInsert(world.events, event, () => new EventStore<T>());
       store?.push(data);
     },
     iter: (): EventIterable<T> => {
-      const store = get_or_insert(world.events, event, () => new EventStore<T>());
-      const read_count = get_or_insert(reader_counts, event, 0);
-      reader_counts.set(event, store.event_count);
+      const store = getOrInsert(world.events, event, () => new EventStore<T>());
+      const readCount = getOrInsert(readerCounts, event, 0);
+      readerCounts.set(event, store.eventCount);
       return {
-        [Symbol.iterator]: () => (store?.drain(read_count) ?? empty_iterator) as EventIterator<T>,
+        [Symbol.iterator]: () => (store?.drain(readCount) ?? emptyIterator) as EventIterator<T>,
       };
     },
     take: (length: number, fn) => {
-      const store = get_or_insert(world.events, event, () => new EventStore<T>());
-      const read_count = get_or_insert(reader_counts, event, 0);
-      reader_counts.set(event, store.event_count);
-      const events = store.events(read_count).slice(-Math.abs(length));
+      const store = getOrInsert(world.events, event, () => new EventStore<T>());
+      const readCount = getOrInsert(readerCounts, event, 0);
+      readerCounts.set(event, store.eventCount);
+      const events = store.events(readCount).slice(-Math.abs(length));
       if (events.length > 0) {
         fn(events);
       }
@@ -59,15 +57,18 @@ export type EventInstance<T extends Event> = InstanceType<T>;
 export type EventIterable<T extends Event> = Iterable<Readonly<EventInstance<T>>>;
 export type EventIterator<T extends Event> = Iterator<Readonly<EventInstance<T>>>;
 
-export type EventsCount = Map<Event, number>;
+export type EventsCounter = Map<Event, number>;
 export type EventStorage = Map<Event, EventStore>;
 
+/**
+ * A read- & write-accessor for an event.
+ */
 export type Events<T extends Event> = {
   /**
    * Sends an event.
    * @param event
    */
-  send(event: EventInstance<T>): void;
+  emit(event: EventInstance<T>): void;
   /**
    * Iterates over the events that this access has not seen yet.
    * Individual event instances can only be read once per system.
@@ -80,36 +81,51 @@ export type Events<T extends Event> = {
   take(length: number, fn: (events: readonly EventInstance<T>[]) => unknown): void;
 };
 
-export type EventWriter<T extends Event> = { send: Events<T>["send"] };
+export type EventWriter<T extends Event> = { emit: Events<T>["emit"] };
 
 export type EventReader<T extends Event> = {
   take: Events<T>["take"];
   iter: Events<T>["iter"];
 };
 
+/**
+ * A event store
+ */
 export class EventStore<T extends Event = Event> {
-  public back: Vec<EventInstance<T>> = vec(64);
-  public front: Vec<EventInstance<T>> = vec(64);
+  back: Vec<EventInstance<T>> = vec(64);
+  front: Vec<EventInstance<T>> = vec(64);
 
-  public event_count: number = 0;
+  eventCount = 0;
 
-  public push(event: EventInstance<T>) {
+  /**
+   * Add event instance
+   * @param event
+   */
+  push(event: EventInstance<T>) {
     this.front.push(event);
-    this.event_count++;
+    this.eventCount++;
   }
 
-  public update() {
+  /**
+   * Update event store.
+   */
+  update() {
     const tmp = this.back.raw;
 
-    this.back.set_raw(this.front.raw);
+    this.back.setRaw(this.front.raw);
     this.back.resize(this.front.length);
 
-    this.front.set_raw(tmp);
+    this.front.setRaw(tmp);
     this.front.clear();
   }
 
-  public events(access_count: number) {
-    const count = this.event_count - access_count;
+  /**
+   * Gets events for given access count.
+   * @param accessCount
+   * @returns
+   */
+  events(accessCount: number) {
+    const count = this.eventCount - accessCount;
     const diff = count - this.front.length;
 
     if (diff <= 0) {
@@ -119,7 +135,12 @@ export class EventStore<T extends Event = Event> {
     return [...this.back.slice(-diff), ...this.front];
   }
 
-  public drain(access_count: number): EventIterator<T> {
-    return this.events(access_count)[Symbol.iterator]();
+  /**
+   * Return iterator for events for given access count.
+   * @param accessCount
+   * @returns
+   */
+  drain(accessCount: number): EventIterator<T> {
+    return this.events(accessCount)[Symbol.iterator]();
   }
 }

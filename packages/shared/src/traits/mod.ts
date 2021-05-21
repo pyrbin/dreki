@@ -1,3 +1,4 @@
-export type Disposable = {
-  dispose(): unknown;
-};
+/**
+ * A disposable type
+ */
+export type Disposable = { dispose: () => void };

@@ -8,6 +8,8 @@
 
 const ENTITY_BITS = 32;
 const ENTITY_INDEX_BITS = 20;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ENTITY_GENERATION_BITS = ENTITY_BITS - ENTITY_INDEX_BITS;
 
 const ENTITY_MAX_INDEX = 0xfffff; // Math.pow(2, ENTITY_INDEX_BITS)
@@ -26,8 +28,7 @@ export type Entity = number;
 /**
  *  Create an [Entity] from given index & generation
  */
-export const Entity = (index: number, generation: number = 0) =>
-  new EntityHandle(index, generation).id();
+export const Entity = (index: number, generation = 0) => new EntityHandle(index, generation).id();
 
 /**
  *  Create an [Entity] from an [EntityId] instance
@@ -39,7 +40,7 @@ Entity.of = (handle: EntityHandle) => handle.id();
  * @param entity
  * @returns
  */
-Entity.handle_of = (entity: Entity) => EntityHandle.from_id(entity);
+Entity.handleOf = (entity: Entity) => EntityHandle.fromId(entity);
 
 /**
  * Retrieves an invalid Entity.
@@ -93,7 +94,7 @@ export class EntityHandle {
    * @param id
    * @returns
    */
-  static from_id(id: number): EntityHandle {
+  static fromId(id: number): EntityHandle {
     return new EntityHandle(
       id & ENTITY_INDEX_MASK,
       (id & ENTITY_GENERATION_MASK) >>> ENTITY_INDEX_BITS,

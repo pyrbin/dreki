@@ -4,56 +4,56 @@ import { World } from "../src/world/mod";
 
 test("execution order", () => {
   let value = 0;
-  const init = (world: World) => {
+  const init = () => {
     expect(value).toBe(0);
     value += 1;
   };
 
-  const pre_update = (world: World) => {
+  const preUpdate = () => {
     expect(value).toBe(1);
     value += 10;
   };
 
-  const update = (world: World) => {
+  const update = () => {
     expect(value).toBe(11);
     value *= 10;
   };
 
-  const post_update = (world: World) => {
+  const postUpdate = () => {
     expect(value).toBe(110);
     value += 15;
   };
 
-  const last_update = (world: World) => {
+  const lastUpdate = () => {
     expect(value).toBe(125);
     value -= 15;
   };
 
-  const init_stage = new Stage(init);
-  const pre_update_stage = new Stage(pre_update);
-  const post_update_stage = new Stage(post_update);
-  const last_update_stage = new Stage(last_update);
+  const initStage = new Stage(init);
+  const preUpdateStage = new Stage(preUpdate);
+  const postUpdateStage = new Stage(postUpdate);
+  const lastUpdateStage = new Stage(lastUpdate);
 
   const scheduler = new Scheduler();
-  scheduler.resolve_stages(
+  scheduler.resolveStages(
     [],
     [
       {
         order: "after",
-        params: ["post_update_stage", "last_update_stage", last_update_stage],
+        params: ["postUpdateStage", "lastUpdateStage", lastUpdateStage],
       },
       {
         order: "before",
-        params: [Stages.Update, "pre_update_stage", pre_update_stage],
+        params: [Stages.Update, "preUpdateStage", preUpdateStage],
       },
       {
         order: "after",
-        params: [Stages.Update, "post_update_stage", post_update_stage],
+        params: [Stages.Update, "postUpdateStage", postUpdateStage],
       },
-      { order: "before", params: ["pre_update_stage", "init", init_stage] },
+      { order: "before", params: ["preUpdateStage", "init", initStage] },
     ],
   );
 
-  scheduler.schedule.insert_systems(Stages.Update, [update]);
+  scheduler.schedule.addSystems(Stages.Update, [update]);
   scheduler.run(new World());
 });

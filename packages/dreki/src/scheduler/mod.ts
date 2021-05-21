@@ -5,7 +5,10 @@ import { Stage, Runnable } from "./stage";
 
 const DEFAULT_STAGES_PREFIX = "default";
 
-export const Stages = stage_labels(DEFAULT_STAGES_PREFIX, {
+/**
+ * Default stages
+ */
+export const Stages = labels(DEFAULT_STAGES_PREFIX, {
   First: "first",
   BeforeUpdate: "before_update",
   Update: "update",
@@ -13,7 +16,10 @@ export const Stages = stage_labels(DEFAULT_STAGES_PREFIX, {
   Last: "last",
 });
 
-export const StartupStages = stage_labels(DEFAULT_STAGES_PREFIX, {
+/**
+ * Default startup stages
+ */
+export const StartupStages = labels(DEFAULT_STAGES_PREFIX, {
   PreStartup: "pre_startup",
   Startup: "startup",
   PostStartup: "post_startup",
@@ -25,19 +31,21 @@ export const StartupStages = stage_labels(DEFAULT_STAGES_PREFIX, {
  * @example
  * ```typescript
  * // generates -> { First: "example::first" }
- * const ExampleStages = prefixed_stages("example", { First: "first" });
+ * const ExampleStages = labels("example", { First: "first" });
  * ```
  * @param prefix
  * @param stages
  * @returns
  */
-export function stage_labels<T extends record>(prefix: string, stages: T) {
-  return Object.fromEntries(Object.entries(stages).map(([k, v]) => [k, `${prefix}::${v}`])) as T;
+export function labels<T extends record>(prefix: string, stages: T) {
+  return Object.fromEntries(
+    Object.entries(stages).map(([k, v]) => [k, `${prefix}::${v}`]),
+  ) as unknown as T;
 }
 
 export type StageCreationParams = {
   order: "after" | "before";
-  params: Parameters<Schedule["add_stage_before"]>;
+  params: Parameters<Schedule["addStageBefore"]>;
 };
 
 /**
@@ -50,22 +58,22 @@ export class Scheduler implements Runnable {
   constructor() {
     // update schedule
     this.schedule = new Schedule([Stages.Update, new Stage()]);
-    this.schedule.add_stage_after(Stages.Update, Stages.AfterUpdate, new Stage());
-    this.schedule.add_stage_after(Stages.AfterUpdate, Stages.Last, new Stage());
-    this.schedule.add_stage_before(Stages.Update, Stages.BeforeUpdate, new Stage());
-    this.schedule.add_stage_before(Stages.BeforeUpdate, Stages.First, new Stage());
+    this.schedule.addStageAfter(Stages.Update, Stages.AfterUpdate, new Stage());
+    this.schedule.addStageAfter(Stages.AfterUpdate, Stages.Last, new Stage());
+    this.schedule.addStageBefore(Stages.Update, Stages.BeforeUpdate, new Stage());
+    this.schedule.addStageBefore(Stages.BeforeUpdate, Stages.First, new Stage());
 
     // startup schedule
     this.startup = new Schedule([StartupStages.Startup, new Stage()]);
-    this.startup.add_stage_after(StartupStages.Startup, StartupStages.PostStartup, new Stage());
-    this.startup.add_stage_before(StartupStages.Startup, StartupStages.PreStartup, new Stage());
+    this.startup.addStageAfter(StartupStages.Startup, StartupStages.PostStartup, new Stage());
+    this.startup.addStageBefore(StartupStages.Startup, StartupStages.PreStartup, new Stage());
   }
 
   /**
    * Run startup schedule
    * @param world
    */
-  run_startup(world: World) {
+  runStartup(world: World) {
     this.startup.run(world);
   }
 
@@ -82,12 +90,12 @@ export class Scheduler implements Runnable {
    * @param startup_params
    * @param update_params
    */
-  resolve_stages(startup_params: StageCreationParams[], update_params: StageCreationParams[]) {
-    this.resolve_stage_internal(startup_params, this.startup);
-    this.resolve_stage_internal(update_params, this.schedule);
+  resolveStages(startupParams: StageCreationParams[], updateParams: StageCreationParams[]) {
+    this.#resolveStagesInternal(startupParams, this.startup);
+    this.#resolveStagesInternal(updateParams, this.schedule);
   }
 
-  private resolve_stage_internal(params: StageCreationParams[], schedule: Schedule) {
+  #resolveStagesInternal(params: StageCreationParams[], schedule: Schedule) {
     const input = params;
     if (input.length <= 0) return;
     let i = -1;
@@ -97,9 +105,9 @@ export class Scheduler implements Runnable {
       const stage = schedule.stages.get(target);
       if (stage === undefined) continue;
       if (input[i].order === "after") {
-        schedule.add_stage_after(...input[i].params);
+        schedule.addStageAfter(...input[i].params);
       } else if (input[i].order === "before") {
-        schedule.add_stage_before(...input[i].params);
+        schedule.addStageBefore(...input[i].params);
       }
       input.splice(i, 1);
     }

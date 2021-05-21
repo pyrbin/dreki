@@ -1,8 +1,8 @@
-import { is_added } from "../../component/ticks";
-import { impl_filter } from "../filter";
+import { isAdded } from "../../component/ticks";
+import { createFilter } from "../filter";
 
 /**
  * Filter that retrieves components if they have been added
  * since the start of the frame
  */
-export const added = impl_filter("added", (world, entity, [, , ...ticks]) => is_added(ticks));
+export const added = createFilter("added", (world, entity, [, , ...ticks]) => isAdded(ticks));

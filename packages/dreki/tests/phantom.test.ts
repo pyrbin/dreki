@@ -1,5 +1,5 @@
 import { World } from "../src/mod";
-import { ComponentSparseSet } from "../src/storage/components";
+import { ComponentSparseSet } from "../src/storage/sparse_set";
 import { PhantomComponentStorage } from "../src/storage/phantom";
 import {
   Point3D,
@@ -15,11 +15,11 @@ test("inheritance uniqueness", () => {
   const world = World.build().done();
   const entity = world.spawn(new Point3D(1, 2, 3));
   world.spawn(Point);
-  const phantom_storage = world.storage.sets.dense.raw[0] as PhantomComponentStorage;
-  const super_storage = world.storage.sets.dense.raw[1] as ComponentSparseSet;
+  const phantomStorage = world.storage.sets.dense.raw[0] as PhantomComponentStorage;
+  const superStorage = world.storage.sets.dense.raw[1] as ComponentSparseSet;
 
-  expect(phantom_storage).toBeInstanceOf(PhantomComponentStorage);
-  expect(phantom_storage.reference).toBe(super_storage);
+  expect(phantomStorage).toBeInstanceOf(PhantomComponentStorage);
+  expect(phantomStorage.parent).toBe(superStorage);
   expect(world.get(entity, Point2D)).toBeUndefined();
   expect(world.get(entity, Point)).toBe(world.get(entity, Point3D));
 

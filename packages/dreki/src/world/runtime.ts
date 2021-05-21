@@ -1,27 +1,24 @@
 import type { ComponentId } from "../component/mod";
 import type { ComponentInfo } from "../component/register";
-import { EventsCount } from "./events";
+import { EventsCounter } from "./events";
 import type { World, WorldId } from "./mod";
 
 /**
- * The runtime class stores global variables thats related  to the
- * ecs runtime when executing queries, fetching components, reading/writing
+ * The Runtime class stores global variables thats related  to the
+ * ecs Runtime when executing queries, fetching components, reading/writing
  * to events etc. It has references to the current world.
  */
-export abstract class runtime {
+export abstract class Runtime {
   // world info
   static worlds: Map<WorldId, World> = new Map();
-  static world_id_counter: WorldId = 0;
+  static worldIdCounter: WorldId = 0;
 
   // execution context
-  static current_world: World = (undefined as unknown) as World;
-  static last_change_tick: number = 0;
-  static last_event_counts: EventsCount = new Map();
+  static currentWorld: World = undefined as unknown as World;
+  static lastChangeTick = 0;
+  static lastEventCounts: EventsCounter = new Map();
 
   // component info
   static components: Map<ComponentId, ComponentInfo> = new Map();
-  static component_id_counter: ComponentId = 0;
-
-  // hide constructor
-  private constructor() {}
+  static componentIdCounter: ComponentId = 0;
 }

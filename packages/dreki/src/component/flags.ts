@@ -1,5 +1,5 @@
 /**
- * Component flags
+ * A component flags
  */
 export enum ComponentFlags {
   None = 0,

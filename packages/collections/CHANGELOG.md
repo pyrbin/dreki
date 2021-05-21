@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 48eb3cf: added `set_raw` and `slice` to `Vec`
+- 48eb3cf: added `setRaw` and `slice` to `Vec`
 - Updated dependencies [ebae067]
   - @dreki.land/shared@0.0.7
 
