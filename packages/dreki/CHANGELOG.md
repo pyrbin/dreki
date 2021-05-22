@@ -1,5 +1,11 @@
 # dreki
 
+## 0.0.13
+
+### Patch Changes
+
+- 992c3cc: query cache & unique query id
+
 ## 0.0.12
 
 ### Patch Changes
