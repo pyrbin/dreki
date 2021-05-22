@@ -2,8 +2,8 @@ import { Entity } from "../src/entity/mod";
 import { events, World } from "../src/mod";
 
 class JumpEvent {
-  public readonly entity: Entity;
-  public readonly force: [x: number, y: number];
+  readonly entity: Entity;
+  readonly force: [x: number, y: number];
 
   constructor(entity: Entity, force: [x: number, y: number]) {
     this.entity = entity;

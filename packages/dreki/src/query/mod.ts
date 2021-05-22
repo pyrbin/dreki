@@ -33,7 +33,9 @@ export function query<T extends QueryParams>(...params: T): Query<T> {
  * todo: look in to why & fix it so we don't have to use `Omit`
  */
 type QueryParams = readonly (Omit<Filter, "predicate"> | Component | Observe | typeof Entity)[];
+
 type QueryIter<T extends QueryParams> = Iterable<QueryResult<T>>;
+
 type QueryResult<T extends QueryParams> = Tuple.Flatten<UnwrapQueryParams<T>>;
 
 /**
@@ -158,7 +160,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param world
    * @returns
    */
-  public iterFor(world: World): Iterator<QueryResult<T>> {
+  iterFor(world: World): Iterator<QueryResult<T>> {
     if (world !== undefined && (world !== this.#world || this.#entities === undefined)) {
       // Only find & cache component sparse sets if world has changed since last iteration
       this.#world = world;
@@ -182,7 +184,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
     this.#result.done = false;
 
     return {
-      next: () => this.execute(),
+      next: () => this.#execute(),
     };
   }
 
@@ -191,7 +193,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param entity
    * @returns
    */
-  private checkEntityFilter(entity: Entity) {
+  #checkEntityFilter(entity: Entity) {
     for (let i = 0; i < this.#entityFilters.length; i++) {
       const filter = this.#entityFilters[i];
       for (let j = 0; j < filter.include.length; j++) {
@@ -209,7 +211,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * Executes a single iterator step for the query & returns an iterator result.
    * @returns
    */
-  private execute(): IteratorResult<QueryResult<T>> {
+  #execute(): IteratorResult<QueryResult<T>> {
     // main iteration loop
     root: while (this.#readIndex < this.#queryLength - 1) {
       this.#resultIndex = 0;
@@ -219,7 +221,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
       const entity = this.#entities!.get(++this.#readIndex);
 
       // if entity filters doesn't pass, goto next.
-      if (!this.checkEntityFilter(entity)) continue root;
+      if (!this.#checkEntityFilter(entity)) continue root;
 
       // if entity was removed & has other filters, we can be sure this entity won't pass.
       if (this.#currentEntityRemoved && this.#hasNonEntityFilters) continue root;

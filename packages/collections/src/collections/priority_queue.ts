@@ -7,7 +7,7 @@ export type WithPriority<T = unknown> = T & {
 export class PriorityQueue<T extends WithPriority> {
   #data: T[];
 
-  public constructor() {
+  constructor() {
     this.#data = [];
   }
 
