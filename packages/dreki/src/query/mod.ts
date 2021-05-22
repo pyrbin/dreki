@@ -1,4 +1,4 @@
-import { arrayOf, Tuple, Type } from "@dreki.land/shared";
+import { arrayOf, getOrInsert, Tuple, Type } from "@dreki.land/shared";
 import { World } from "../world/mod";
 import { Runtime } from "../world/runtime";
 import type { Component, ComponentInstance, IsTag } from "../component/mod";
@@ -23,8 +23,13 @@ import { removed } from "./filters/removed";
  * @returns
  */
 export function query<T extends QueryParams>(...params: T): Query<T> {
-  return new Query<T>(...(params as T)) as Query<T>;
+  // get query from cache or create & insert a new query
+  const id = uniqueQueryIdentifier(...params);
+  return getOrInsert(queryCache, id, () => new Query<T>(...(params as T)));
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const queryCache = new Map<string, Query<any>>();
 
 /**
  * We omit `predicate` from Filter because else the typing fails for `non-entity` filters
@@ -84,6 +89,8 @@ class Query<T extends QueryParams> implements QueryIter<T> {
   #hasNonEntityFilters = false;
   #currentEntityRemoved = false;
 
+  readonly id: string;
+
   readonly #fetchInfo: readonly QueryParamFetchInfo[];
   readonly #entityFilters: readonly EntityFilter[];
   readonly #componentInfo: readonly ComponentInfo[];
@@ -100,6 +107,9 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param params
    */
   constructor(...params: T) {
+    // generate & set query id.
+    this.id = uniqueQueryIdentifier(...params);
+
     // parse & flatten params
     this.#fetchInfo = params.flatMap((x) =>
       isFilter(x)
@@ -160,7 +170,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @param world
    * @returns
    */
-  iterFor(world: World): Iterator<QueryResult<T>> {
+  for(world: World): Iterator<QueryResult<T>> {
     if (world !== undefined && (world !== this.#world || this.#entities === undefined)) {
       // Only find & cache component sparse sets if world has changed since last iteration
       this.#world = world;
@@ -292,7 +302,7 @@ class Query<T extends QueryParams> implements QueryIter<T> {
    * @returns
    */
   [Symbol.iterator](): Iterator<QueryResult<T>> {
-    return this.iterFor(Runtime.currentWorld);
+    return this.for(Runtime.currentWorld);
   }
 }
 
@@ -333,4 +343,42 @@ function unpackQueryParamFetchInfo(
     fetchFn,
     ignoreHasCheck,
   };
+}
+
+/**
+ * Generate a unique identifier for given query params.
+ *
+ * This is used to cache queries so we don't have to re- build the query
+ * every time it's created by the `query`-function.
+ * @param params
+ * @returns
+ */
+function uniqueQueryIdentifier<T extends QueryParams>(...params: T) {
+  const parsedParams: string[] = [];
+
+  const observePrefix = "observe";
+  const entityId = "e";
+
+  for (const param of params) {
+    let [prefix, paramId] = ["", ""];
+    if (isFilter(param)) {
+      prefix = param.identifier;
+      for (let i = 0; i < param.include.length; i++) {
+        const component = getComponentInfoOrRegister(param.include[i] as Component);
+        paramId += component.id.toString();
+      }
+    } else {
+      const paramIsObserve = isObserve(param);
+      const symbol =
+        param === Entity
+          ? entityId
+          : getComponentInfoOrRegister(
+              paramIsObserve ? (param as Observe).include : (param as Component),
+            ).id;
+      paramId = symbol.toString();
+      prefix = paramIsObserve ? observePrefix : "";
+    }
+    parsedParams.push(`${prefix}${paramId}`);
+  }
+  return parsedParams.sort().join("_");
 }

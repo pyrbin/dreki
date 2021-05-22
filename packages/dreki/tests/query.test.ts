@@ -354,3 +354,14 @@ test("super component batch", () => {
 
   world.update();
 });
+
+test("query identifier", () => {
+  const params = [IsPlayer, Entity, not(Point), changed(Scale)];
+
+  // query identifier shouldn't be affected by order of params.
+  const q1 = query(...params.sort(() => 0.5 - Math.random()));
+  const q2 = query(...params.sort(() => 0.5 - Math.random()));
+
+  expect(q1.id).toBe(q2.id);
+  expect(q1).toEqual(q2);
+});
