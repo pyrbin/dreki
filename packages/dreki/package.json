@@ -23,7 +23,6 @@
     "build": "rimraf out && tsc"
   },
   "dependencies": {
-    "@dreki.land/collections": "workspace:*",
     "@dreki.land/shared": "workspace:*"
   }
 }

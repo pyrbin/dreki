@@ -1,5 +1,4 @@
-import { range } from "@dreki.land/shared";
-import { vec } from "../src/mod";
+import { range, vec } from "../src/mod";
 
 test("simple allocation", () => {
   const SIZE = 10;

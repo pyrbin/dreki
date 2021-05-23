@@ -1,5 +1,4 @@
-import { Vec, vec, sliceOf } from "@dreki.land/collections";
-import { Allocator, Disposable, iter, swap } from "@dreki.land/shared";
+import { Allocator, Disposable, iter, swap, Vec, vec, sliceOf } from "@dreki.land/shared";
 import {
   ComponentInstance,
   ComponentFlags,

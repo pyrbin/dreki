@@ -1,4 +1,4 @@
-import { sliceOf } from "@dreki.land/collections";
+import { sliceOf } from "@dreki.land/shared";
 import { ComponentInstance, ComponentFlags, ComponentTick } from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { Entity } from "../entity/mod";

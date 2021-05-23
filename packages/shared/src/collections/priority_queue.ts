@@ -1,9 +1,15 @@
-import { swap } from "@dreki.land/shared";
+import { swap } from "../utils/mod";
 
+/**
+ * A type with priority
+ */
 export type WithPriority<T = unknown> = T & {
   priority?: number;
 };
 
+/**
+ * A simple priority queue
+ */
 export class PriorityQueue<T extends WithPriority> {
   #data: T[];
 

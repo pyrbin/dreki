@@ -1,6 +1,10 @@
-import { Allocator, useAllocator } from "@dreki.land/shared";
+import { Allocator } from "../types/mod";
+import { useAllocator } from "../utils/generic";
 import { vec, Vec } from "./vec";
 
+/**
+ * A generic sparse-set implementation.
+ */
 export class SparseSet<I extends number, T> implements Iterable<T> {
   readonly dense: Vec<T>;
   readonly indices: Vec<I>;

@@ -30,18 +30,10 @@ importers:
       rimraf: 3.0.2
       typescript: 4.3.0-dev.20210510
 
-  packages/collections:
-    specifiers:
-      '@dreki.land/shared': workspace:*
-    dependencies:
-      '@dreki.land/shared': link:../shared
-
   packages/dreki:
     specifiers:
-      '@dreki.land/collections': workspace:*
       '@dreki.land/shared': workspace:*
     dependencies:
-      '@dreki.land/collections': link:../collections
       '@dreki.land/shared': link:../shared
 
   packages/shared:

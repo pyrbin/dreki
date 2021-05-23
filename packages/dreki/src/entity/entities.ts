@@ -1,4 +1,4 @@
-import { Vec, vec } from "@dreki.land/collections";
+import { Vec, vec } from "@dreki.land/shared";
 import { Entity } from "./mod";
 import { MAX_ENTITY_CAPACITY } from "../constants";
 

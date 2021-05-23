@@ -1,4 +1,2 @@
-/**
- * A disposable type
- */
-export type Disposable = { dispose: () => void };
+export * from "./dispose";
+export * from "./slice";

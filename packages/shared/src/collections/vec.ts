@@ -1,4 +1,5 @@
-import { Allocator, arrayOf, insertAt, swap, useAllocator } from "@dreki.land/shared";
+import { Allocator } from "../types/mod";
+import { arrayOf, insertAt, swap, useAllocator } from "../utils/mod";
 
 /**
  * Function to create a new vector with given capacity & allocator.

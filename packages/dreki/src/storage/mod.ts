@@ -1,4 +1,4 @@
-import { SparseSet } from "@dreki.land/collections";
+import { SparseSet } from "@dreki.land/shared";
 import { ComponentId } from "../component/mod";
 import { ComponentStorage, EntitySlice } from "./components";
 import { ComponentInfo, getComponentId, getComponentInfoOrRegister } from "../component/register";
