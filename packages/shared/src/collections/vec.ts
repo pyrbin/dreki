@@ -1,4 +1,5 @@
-import { Allocator, array_of, insert_at, swap, use_allocator } from "@dreki.land/shared";
+import { Allocator } from "../types/mod";
+import { arrayOf, insertAt, swap, useAllocator } from "../utils/mod";
 
 /**
  * Function to create a new vector with given capacity & allocator.
@@ -11,56 +12,58 @@ export function vec<T = number>(capacity = 1, allocator: Allocator<T> = undefine
 }
 
 /**
- * Vector implementation class
+ * A vector array class. Inspired by rust's Vec.
  */
 export class Vec<T> implements Iterable<T> {
-  private data: T[];
-  private len = 0;
+  #data: T[];
+  #len = 0;
+  #allocator: Allocator<T> = undefined;
 
-  constructor(capacity = 1, private readonly allocator: Allocator<T> = undefined) {
-    this.data = array_of(capacity, allocator);
-    this.len = 0;
+  constructor(capacity = 1, allocator: Allocator<T> = undefined) {
+    this.#data = arrayOf(capacity, allocator);
+    this.#len = 0;
+    this.#allocator = allocator;
   }
 
   get(index: number): T {
-    return this.data[index];
+    return this.#data[index];
   }
 
   set(index: number, element: T) {
-    return (this.data[index] = element);
+    return (this.#data[index] = element);
   }
 
   push(...elements: T[]) {
-    const new_size = this.len + elements.length;
-    if (new_size >= this.capacity) this.realloc(Math.max(new_size, this.capacity * 1.5));
+    const newSize = this.#len + elements.length;
+    if (newSize >= this.capacity) this.realloc(Math.max(newSize, this.capacity * 1.5));
     for (const element of elements) {
-      this.data[this.len++] = element;
+      this.#data[this.#len++] = element;
     }
-    return this.len;
+    return this.#len;
   }
 
   insert(index: number, element: T): void {
     if (index >= this.capacity) this.realloc();
-    insert_at((this as unknown) as Array<T>, index, element);
+    insertAt(this as unknown as Array<T>, index, element);
   }
 
   remove(index: number) {
-    if (index > this.len) return;
-    const value = this.data[index];
-    for (index; index < this.len - 1; index++) {
-      swap(this.data, index, index + 1);
+    if (index > this.#len) return;
+    const value = this.#data[index];
+    for (index; index < this.#len - 1; index++) {
+      swap(this.#data, index, index + 1);
     }
-    this.len--;
+    this.#len--;
     return value;
   }
 
   pop(): T | undefined {
-    if (this.len === 0) return;
-    return this.data[--this.len];
+    if (this.#len === 0) return;
+    return this.#data[--this.#len];
   }
 
   resize(length: number): number {
-    return (this.len = Math.min(length, this.capacity));
+    return (this.#len = Math.min(length, this.capacity));
   }
 
   clear(): void {
@@ -74,19 +77,19 @@ export class Vec<T> implements Iterable<T> {
       return this.truncate(length);
     }
     for (let i = this.capacity; i < length; i++) {
-      this.data.push(use_allocator(this.allocator));
+      this.#data.push(useAllocator(this.#allocator));
     }
     return this.capacity;
   }
 
   truncate(length: number): number {
-    this.data.slice(0, length);
-    return (this.len = this.len > length ? length : this.len);
+    this.#data.slice(0, length);
+    return (this.#len = this.#len > length ? length : this.#len);
   }
 
-  swap_remove(index: number): T {
-    const value = this.data[index];
-    swap(this.data, --this.len, index);
+  swapRemove(index: number): T {
+    const value = this.#data[index];
+    swap(this.#data, --this.#len, index);
     return value;
   }
 
@@ -94,41 +97,41 @@ export class Vec<T> implements Iterable<T> {
     callback: (element: T, index: number, array: T[]) => boolean,
     thisArg?: unknown,
   ): T | undefined {
-    return this.raw.slice(0, this.len).find(callback, thisArg);
+    return this.raw.slice(0, this.#len).find(callback, thisArg);
   }
 
-  find_index(
+  findIndex(
     callback: (element: T, index: number, array: T[]) => boolean,
     thisArg?: unknown,
   ): number {
-    return this.raw.slice(0, this.len).findIndex(callback, thisArg);
+    return this.raw.slice(0, this.#len).findIndex(callback, thisArg);
   }
 
   slice(start?: number, end?: number): T[] {
-    return this.raw.slice(0, this.len).slice(start, end);
+    return this.raw.slice(0, this.#len).slice(start, end);
   }
 
   map<Mapped extends Array<unknown>>(
     callback: (element: T, index: number, array: T[]) => Mapped[number],
     thisArg?: unknown,
   ): Mapped {
-    return this.raw.slice(0, this.len).map(callback, thisArg) as Mapped;
+    return this.raw.slice(0, this.#len).map(callback, thisArg) as Mapped;
   }
 
   filter(callback: (element: T, index: number, array: T[]) => boolean, thisArg?: unknown): T[] {
-    return this.raw.slice(0, this.len).filter(callback, thisArg);
+    return this.raw.slice(0, this.#len).filter(callback, thisArg);
   }
 
-  set_raw(array: T[]) {
-    this.data = array;
+  setRaw(array: T[]) {
+    this.#data = array;
   }
 
   full(): boolean {
-    return this.capacity === this.len;
+    return this.capacity === this.#len;
   }
 
   empty(): boolean {
-    return this.len === 0;
+    return this.#len === 0;
   }
 
   /**
@@ -136,34 +139,34 @@ export class Vec<T> implements Iterable<T> {
    * than `set` & `get` but is unchecked.
    */
   get raw(): T[] {
-    return this.data;
+    return this.#data;
   }
 
   get first(): T {
-    return this.data[0];
+    return this.#data[0];
   }
 
   get last(): T {
-    return this.data[this.len - 1];
+    return this.#data[this.#len - 1];
   }
 
   get capacity() {
-    return this.data.length;
+    return this.#data.length;
   }
 
   get length() {
-    return this.len;
+    return this.#len;
   }
 
   [Symbol.iterator](): IterableIterator<T> {
-    let read_index = 0;
-    const length = this.len;
-    const array = this.data;
+    let readIndex = 0;
+    const length = this.#len;
+    const array = this.#data;
     return {
       next(): IteratorResult<T> {
-        if (read_index < length) {
+        if (readIndex < length) {
           return {
-            value: array[read_index++] as T,
+            value: array[readIndex++] as T,
           };
         }
         return {

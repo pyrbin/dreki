@@ -1,6 +1,6 @@
 {
   "name": "dreki",
-  "version": "0.0.10",
+  "version": "0.0.13",
   "description": "🐉 An Entity-Component System library written in Typescript",
   "license": "MIT",
   "private": false,
@@ -23,7 +23,6 @@
     "build": "rimraf out && tsc"
   },
   "dependencies": {
-    "@dreki.land/collections": "workspace:*",
     "@dreki.land/shared": "workspace:*"
   }
 }

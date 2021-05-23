@@ -1,4 +1,4 @@
-import { bitflags, get_instance_and_type } from "@dreki.land/shared";
+import { bitflags, getInstanceAndType } from "@dreki.land/shared";
 import {
   Component,
   ComponentBundle,
@@ -6,12 +6,12 @@ import {
   Components,
   ReadonlyComponents,
 } from "../component/mod";
-import { get_component_id, get_component_info_or_register } from "../component/register";
+import { getComponentId, getComponentInfoOrRegister } from "../component/register";
 import type { Entity } from "../entity/mod";
 import { Entities } from "../entity/entities";
 import type { Resource } from "./resources";
-import { Storage, Resources } from "../storage/mod";
-import { runtime } from "./runtime";
+import { Storage } from "../storage/mod";
+import { Runtime } from "./runtime";
 import { Scheduler } from "../scheduler/mod";
 import {
   DEFAULT_ENTITY_CAPACITY,
@@ -20,8 +20,9 @@ import {
 } from "../constants";
 import { WorldBuilder } from "./builder";
 import type { Plugins } from "./plugin";
-import { EventsCount, EventStorage, Event, event_internal, EventWriter } from "./events";
+import { EventsCounter, EventStorage, Event, eventInternal, EventWriter } from "./events";
 import { Commands } from "./commands";
+import { Resources } from "../storage/resources";
 
 /**
  * Represents the id of a world
@@ -62,10 +63,11 @@ export class World {
   readonly plugins: Plugins;
   readonly events: EventStorage;
 
-  change_tick: number = 1;
-  last_change_tick: number = 0;
-  events_counts: EventsCount;
-  should_run_startup: boolean = true;
+  changeTick = 1;
+  lastChangeTick = 0;
+  eventsCounter: EventsCounter;
+
+  #shouldRunStartup = true;
 
   get capacity() {
     return this.entities.capacity;
@@ -86,25 +88,25 @@ export class World {
    * @param options
    */
   constructor(options?: WorldOptions) {
-    this.id = runtime.world_id_counter++;
-    runtime.worlds.set(this.id, this);
+    this.id = Runtime.worldIdCounter++;
+    Runtime.worlds.set(this.id, this);
 
     const capacity = Math.min(options?.capacity ?? DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY);
 
     this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT, (entity, storage) => {
-      storage?.set_changed_tick(entity, this.change_tick);
+      storage?.setChangedTick(entity, this.changeTick);
     });
 
-    this.events = new Map();
-    this.events_counts = new Map();
     this.plugins = [];
+    this.events = new Map();
+    this.eventsCounter = new Map();
     this.scheduler = new Scheduler();
     this.resources = new Resources();
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
 
-    this.update_runtime();
+    this.#updateRuntime();
   }
 
   /**
@@ -168,12 +170,12 @@ export class World {
    */
   add(entity: Entity, ...components: ComponentBundle) {
     for (let i = 0; i < components.length; i++) {
-      const [instance, type] = get_instance_and_type(components[i]);
+      const [instance, type] = getInstanceAndType(components[i]);
       if (this.has(entity, type)) continue;
-      const info = get_component_info_or_register(type);
+      const info = getComponentInfoOrRegister(type);
       this.storage
-        .get_or_create(info, this.capacity)
-        .insert(entity, instance, ComponentFlags.None, this.change_tick);
+        .getOrCreate(info, this.capacity)
+        .insert(entity, instance, ComponentFlags.None, this.changeTick);
     }
   }
 
@@ -184,8 +186,8 @@ export class World {
    */
   remove(entity: Entity, ...components: ReadonlyComponents) {
     for (let i = 0; i < components.length; i++) {
-      const component_id = get_component_id(components[i]);
-      this.storage.get(component_id).remove(entity);
+      const componentId = getComponentId(components[i]);
+      this.storage.get(componentId).remove(entity);
     }
   }
 
@@ -196,7 +198,7 @@ export class World {
    * @returns
    */
   get<T extends Component>(entity: Entity, component: T) {
-    return this.storage.get(get_component_id(component))?.get(entity) as InstanceType<T>;
+    return this.storage.get(getComponentId(component))?.get(entity) as InstanceType<T>;
   }
 
   /**
@@ -206,7 +208,7 @@ export class World {
    * @returns
    */
   single<T extends Component>(component: T) {
-    const storage = this.storage.get(get_component_id(component));
+    const storage = this.storage.get(getComponentId(component));
     if (storage == undefined) {
       return undefined;
     }
@@ -214,7 +216,7 @@ export class World {
       throw new Error(`There exist more than 0 entity with component ${component.name}!`);
     }
     if (storage.length === 1) {
-      return storage.entity_slice().get(0);
+      return storage.entitySlice().get(0);
     }
   }
 
@@ -223,7 +225,7 @@ export class World {
    * @param component
    * @returns
    */
-  try_single<T extends Component>(component: T) {
+  trySingle<T extends Component>(component: T) {
     try {
       return this.single(component);
     } catch {
@@ -238,8 +240,8 @@ export class World {
    */
   enable<T extends Component>(entity: Entity, component: T) {
     this.storage
-      .get(get_component_id(component))
-      ?.set_flag(entity, (flag) => bitflags.remove(flag, ComponentFlags.Disabled));
+      .get(getComponentId(component))
+      ?.setFlag(entity, (flag: ComponentFlags) => bitflags.remove(flag, ComponentFlags.Disabled));
   }
 
   /**
@@ -274,8 +276,8 @@ export class World {
    */
   disable<T extends Component>(entity: Entity, component: T) {
     this.storage
-      .get(get_component_id(component))
-      ?.set_flag(entity, (flag) => bitflags.insert(flag, ComponentFlags.Disabled));
+      .get(getComponentId(component))
+      ?.setFlag(entity, (flag: ComponentFlags) => bitflags.insert(flag, ComponentFlags.Disabled));
   }
 
   /**
@@ -286,8 +288,7 @@ export class World {
    */
   disabled<T extends Component>(entity: Entity, component: T) {
     return bitflags.contains(
-      this.storage.get(get_component_id(component))?.get_with_state(entity)?.[1] ??
-        ComponentFlags.None,
+      this.storage.get(getComponentId(component))?.getWithState(entity)?.[1] ?? ComponentFlags.None,
       ComponentFlags.Disabled,
     );
   }
@@ -299,29 +300,29 @@ export class World {
    * @returns
    */
   has(entity: Entity, component: Component) {
-    return this.storage.get(get_component_id(component))?.has(entity) ?? false;
+    return this.storage.get(getComponentId(component))?.has(entity) ?? false;
   }
 
   /**
    * Returns true if given `component` was removed from given `entity`
-   * since last call to `clear_trackers`.
+   * since last call to `clearTrackers`.
    * @param entity
    * @param component
    * @returns
    */
-  was_removed(entity: Entity, component: Component) {
-    return this.storage.get(get_component_id(component))?.has_removed(entity) ?? false;
+  wasRemoved(entity: Entity, component: Component) {
+    return this.storage.get(getComponentId(component))?.hasRemoved(entity) ?? false;
   }
 
   /**
    * Returns component instance if given `component` was removed from given `entity`
-   * since last call to `clear_trackers` else returns undefined.
+   * since last call to `clearTrackers` else returns undefined.
    * @param entity
    * @param component
    * @returns
    */
-  get_removed<T extends Component>(entity: Entity, component: T) {
-    return this.storage.get(get_component_id(component))?.get_removed(entity);
+  getRemoved<T extends Component>(entity: Entity, component: T) {
+    return this.storage.get(getComponentId(component))?.getRemoved(entity);
   }
 
   /**
@@ -353,7 +354,7 @@ export class World {
    * @param resource
    * @returns
    */
-  has_resource<T extends Resource>(resource: T) {
+  hasResource<T extends Resource>(resource: T) {
     return this.resources.has(resource);
   }
 
@@ -361,8 +362,8 @@ export class World {
    * Add a `resource` to the world.
    * @param resource
    */
-  add_resource<T extends Resource>(resource: T | InstanceType<T>) {
-    const [instance] = get_instance_and_type(resource);
+  addResource<T extends Resource>(resource: T | InstanceType<T>) {
+    const [instance] = getInstanceAndType(resource);
     this.resources.insert(instance);
   }
 
@@ -371,26 +372,26 @@ export class World {
    * @param resource
    * @returns
    */
-  delete_resource<T extends Resource>(resource: T) {
-    return this.resources.dispose(resource);
+  deleteResource<T extends Resource>(resource: T) {
+    return this.resources.free(resource);
   }
 
   /**
    * Runs the `Scheduler` which updates all stages & systems.
    */
   update() {
-    runtime.current_world = this;
+    Runtime.currentWorld = this;
 
-    if (this.should_run_startup) {
-      this.scheduler.run_startup(this);
-      this.should_run_startup = false;
+    if (this.#shouldRunStartup) {
+      this.scheduler.runStartup(this);
+      this.#shouldRunStartup = false;
     }
 
     this.scheduler.run(this);
-    this.clear_trackers();
+    this.clearTrackers();
 
     // update event stores
-    for (const [event, store] of this.events) {
+    for (const [, store] of this.events) {
       store.update();
     }
   }
@@ -399,29 +400,29 @@ export class World {
    * Increment world change tick & return the value.
    * @returns
    */
-  increment_change_tick() {
-    return (this.change_tick += 1);
+  incrementChangeTick() {
+    return (this.changeTick += 1);
   }
 
   /**
    * Check & clamp component change ticks
    */
-  check_change_ticks() {
-    this.storage.check_change_ticks(this.change_tick);
+  checkChangeTicks() {
+    this.storage.checkChangeTicks(this.changeTick);
   }
 
   /**
    * Clears all component state tracker.
    */
-  clear_trackers() {
-    // increment world last_change tick.
-    this.last_change_tick = this.increment_change_tick();
+  clearTrackers() {
+    // increment world lastChange tick.
+    this.lastChangeTick = this.incrementChangeTick();
 
     // clear removed trackers
-    this.storage.clear_removed_cache();
+    this.storage.clearRemovedCache();
 
-    // update runtime
-    this.update_runtime();
+    // update Runtime
+    this.#updateRuntime();
   }
 
   /**
@@ -444,10 +445,7 @@ export class World {
    * @returns
    */
   register(component: Component) {
-    const storage = this.storage.get_or_create(
-      get_component_info_or_register(component),
-      this.capacity,
-    );
+    const storage = this.storage.getOrCreate(getComponentInfoOrRegister(component), this.capacity);
     return storage !== undefined;
   }
 
@@ -458,7 +456,7 @@ export class World {
    * @returns
    */
   event(event: Event) {
-    return event_internal(event, this, this.events_counts);
+    return eventInternal(event, this, this.eventsCounter);
   }
 
   /**
@@ -466,15 +464,15 @@ export class World {
    * @param event
    * @returns
    */
-  event_writer<T extends Event>(event: T): EventWriter<T> {
-    return { send: event_internal(event, this, this.events_counts)["send"] };
+  eventWriter<T extends Event>(event: T): EventWriter<T> {
+    return { emit: eventInternal(event, this, this.eventsCounter)["emit"] };
   }
 
   /**
-   * Update runtime with this World's values.
+   * Update Runtime with this World's values.
    */
-  private update_runtime() {
-    runtime.last_change_tick = this.last_change_tick;
-    runtime.last_event_counts = this.events_counts;
+  #updateRuntime() {
+    Runtime.lastChangeTick = this.lastChangeTick;
+    Runtime.lastEventCounts = this.eventsCounter;
   }
 }

@@ -6,22 +6,22 @@
  * https://github.com/pyrbin/dreki
  */
 
-// World
+// world
 export { World, WorldOptions } from "./world/mod";
 export { WorldBuilder } from "./world/builder";
 export { Plugin } from "./world/plugin";
-export { resources } from "./world/resources";
 export { events } from "./world/events";
-export { runtime } from "./world/runtime";
+export { res } from "./world/resources";
+export { Runtime } from "./world/runtime";
 
-// Entity
+// entity
 export { Entity } from "./entity/mod";
 
-// Scheduler
+// scheduler
 export { Stage } from "./scheduler/stage";
 export type { SystemFunc as System } from "./scheduler/system";
 export { Stages, StartupStages } from "./scheduler/mod";
-export { stage_labels } from "./scheduler/mod";
+export { labels } from "./scheduler/mod";
 
-// Query
+// query
 export { query } from "./query/mod";

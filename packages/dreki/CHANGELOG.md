@@ -1,5 +1,33 @@
 # dreki
 
+## 0.0.13
+
+### Patch Changes
+
+- 992c3cc: query cache & unique query id
+
+## 0.0.12
+
+### Patch Changes
+
+- 33666ce: cleanup & overall refactoring
+
+  - switched from `snake_case` to `camelCase`
+  - replaced `@swc/jest` with `esbuild-runner`
+  - use [private field hash `#` prefix](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) (still not sure about this)
+
+- Updated dependencies [33666ce]
+  - @dreki.land/collections@0.0.8
+  - @dreki.land/shared@0.0.8
+
+## 0.0.11
+
+### Patch Changes
+
+- 95cbe1b: fixed `World.single` undefined storage error
+- 9f3e0b7: bugfix `World.register` correctly creates storage for component
+- b686282: added commands feature
+
 ## 0.0.10
 
 ### Patch Changes
@@ -32,7 +60,7 @@
 - 518f7f7: added initial plugin implementation
 - 9189bec: minor bugfixes
 
-  - `get_with_state` correctly returns undefined
+  - `getWithState` correctly returns undefined
   - `'has'`-functions always returns a boolean
 
 - 86a5a13: improved removed filter

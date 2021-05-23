@@ -1,4 +1,4 @@
-import { runtime } from "../world/runtime";
+import { Runtime } from "../world/runtime";
 
 /**
  * Number type alias for Component ticks.
@@ -7,48 +7,48 @@ export type ComponentTick = number;
 
 /**
  * Returns true if component was changed for given entity for current tick retrieved
- * from `runtime.change_tick`.
+ * from `Runtime.changeTick`.
  * @param entity
  * @returns
  */
-export function is_changed(
+export function isChanged(
   ticks: readonly [added: ComponentTick, changed: ComponentTick],
-  last_change_tick: ComponentTick = runtime.last_change_tick,
-  change_tick: ComponentTick = runtime.current_world.change_tick,
+  lastChangeTick: ComponentTick = Runtime.lastChangeTick,
+  changeTick: ComponentTick = Runtime.currentWorld.changeTick,
 ) {
   return (
-    is_tick_changed(ticks[1], last_change_tick, change_tick) &&
-    !is_added(ticks, last_change_tick, change_tick)
+    isTickChanged(ticks[1], lastChangeTick, changeTick) &&
+    !isAdded(ticks, lastChangeTick, changeTick)
   );
 }
 
 /**
  * Returns true if component was changed for given entity for current tick retrieved
- * from `runtime.change_tick`.
+ * from `Runtime.changeTick`.
  * @param entity
  * @returns
  */
-export function is_added(
+export function isAdded(
   ticks: readonly [added: ComponentTick, changed: ComponentTick],
-  last_change_tick: ComponentTick = runtime.last_change_tick,
-  change_tick: ComponentTick = runtime.current_world.change_tick,
+  lastChangeTick: ComponentTick = Runtime.lastChangeTick,
+  changeTick: ComponentTick = Runtime.currentWorld.changeTick,
 ) {
-  return is_tick_changed(ticks[0], last_change_tick, change_tick);
+  return isTickChanged(ticks[0], lastChangeTick, changeTick);
 }
 
 /**
- * Returns true if tick should be checked relative to given `last_change_tick` with current `change_tick`.
+ * Returns true if tick should be checked relative to given `lastChangeTick` with current `changeTick`.
  * @param tick
- * @param last_tick
- * @param changed_tick
+ * @param lastChangeTick
+ * @param changedTick
  * @returns
  */
-function is_tick_changed(
+function isTickChanged(
   tick: ComponentTick,
-  last_change_tick: ComponentTick,
-  change_tick: ComponentTick,
+  lastChangeTick: ComponentTick,
+  changeTick: ComponentTick,
 ) {
-  const component_delta = change_tick - tick;
-  const last_change_delta = change_tick - last_change_tick;
-  return component_delta <= last_change_delta;
+  const componentDelta = changeTick - tick;
+  const lastChangeDelta = changeTick - lastChangeTick;
+  return componentDelta <= lastChangeDelta;
 }

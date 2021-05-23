@@ -1,3 +1,2 @@
-export type Disposable = {
-  dispose(): unknown;
-};
+export * from "./dispose";
+export * from "./slice";

@@ -1,10 +1,11 @@
-import type { Resource, ResourceInstance } from "../world/resources";
+import { Disposable } from "@dreki.land/shared";
+import { Resource, ResourceInstance } from "../world/resources";
 
 /**
  * Storage for resources. Currently just a wrapper around a
  * Map with the constructor as `key` and the instance as `value`.
  */
-export class Resources {
+export class Resources implements Disposable {
   readonly data: Map<Resource, ResourceInstance>;
 
   constructor() {
@@ -46,14 +47,23 @@ export class Resources {
    * @param resource
    * @returns
    */
-  dispose<T extends Resource>(resource: T) {
+  free<T extends Resource>(resource: T) {
     const value = this.data.get(resource);
 
     if (value) {
-      value?.dispose?.();
+      (value as Disposable)?.dispose?.();
       return this.data.delete(resource);
     }
 
     return false;
+  }
+
+  /**
+   * Dispose resources
+   */
+  dispose() {
+    for (const [res] of this.data) {
+      this.free(res);
+    }
   }
 }

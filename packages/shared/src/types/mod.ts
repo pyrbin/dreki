@@ -1,23 +1,40 @@
 export * from "./tuple";
 
 /**
+ * A generic record type
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type record = Record<string, any>;
+
+/**
  * Represents a type
  */
-export interface Type<T = Record<string, any>> extends Function {
+export interface Type<T = record> extends Function {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new (...args: any[]): T;
 }
 
-export type record = Record<string, any>;
-
+/**
+ * Tuple of types
+ */
 export type Types<T = Type> = readonly T[];
 
+/**
+ * A allocate-like function for creating an instance of T
+ */
 export type Allocator<T> = (() => T) | number | undefined;
 
+/**
+ * Remove methods from given type T
+ */
 export type ExcludeMethods<T> = Pick<
   T,
-  { [K in keyof T]: T[K] extends (_: any) => any ? never : K }[keyof T]
+  { [K in keyof T]: T[K] extends ([,]: unknown) => unknown ? never : K }[keyof T]
 >;
 
+/**
+ * Typed arrays
+ */
 export type TypedArray =
   | Int8Array
   | Uint8Array
@@ -29,6 +46,9 @@ export type TypedArray =
   | Float32Array
   | Float64Array;
 
+/**
+ * Typed array constructors
+ */
 export type TypedArrayConstructor =
   | Int8ArrayConstructor
   | Uint8ArrayConstructor

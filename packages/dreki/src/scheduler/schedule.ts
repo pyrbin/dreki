@@ -1,13 +1,16 @@
-import { insert_at } from "@dreki.land/shared";
+import { insertAt } from "@dreki.land/shared";
 import type { World } from "../mod";
 import type { StageLabel, Stage, Runnable } from "./stage";
 import type { SystemFunc } from "./system";
 
+/**
+ * A schedule of runnable stages
+ */
 export class Schedule implements Runnable {
   readonly stages: Map<StageLabel, Stage>;
   readonly ordered: [StageLabel, Stage][];
 
-  public constructor(initial: [StageLabel, Stage]) {
+  constructor(initial: [StageLabel, Stage]) {
     const [name, group] = initial;
     this.ordered = [];
     this.stages = new Map();
@@ -15,12 +18,20 @@ export class Schedule implements Runnable {
     this.ordered.push([name, group]);
   }
 
+  /**
+   * Run schedule on given world
+   * @param world
+   */
   run(world: World) {
     for (let i = 0; i < this.ordered.length; i++) {
       this.ordered[i][1].run(world);
     }
   }
 
+  /**
+   * Iterate each stage
+   * @returns
+   */
   iter() {
     const iterator = this.ordered[Symbol.iterator]();
     return {
@@ -30,28 +41,40 @@ export class Schedule implements Runnable {
     };
   }
 
-  add_stage_after(target: StageLabel, label: StageLabel, stage: Stage) {
-    this.add_stage_with_offset(target, 1, label, stage);
+  /**
+   * Add a new stage after target with label
+   * @param target
+   * @param label
+   * @param stage
+   */
+  addStageAfter(target: StageLabel, label: StageLabel, stage: Stage) {
+    this.#addStageWithOffset(target, 1, label, stage);
   }
 
-  add_stage_before(target: StageLabel, label: StageLabel, stage: Stage) {
-    this.add_stage_with_offset(target, 0, label, stage);
+  /**
+   * Add a new stage before target with label
+   * @param target
+   * @param label
+   * @param stage
+   */
+  addStageBefore(target: StageLabel, label: StageLabel, stage: Stage) {
+    this.#addStageWithOffset(target, 0, label, stage);
   }
 
-  insert_systems(target: StageLabel, systems: SystemFunc[]) {
+  /**
+   * Add systems to target stage
+   * @param target
+   * @param systems
+   */
+  addSystems(target: StageLabel, systems: SystemFunc[]) {
     if (!this.stages.has(target)) {
       throw new Error(`Target group ${target} doesn't exist`);
     }
 
-    this.stages.get(target)?.add_systems(...systems);
+    this.stages.get(target)?.addSystems(...systems);
   }
 
-  private add_stage_with_offset(
-    target: StageLabel,
-    offset: number,
-    label: StageLabel,
-    group: Stage,
-  ) {
+  #addStageWithOffset(target: StageLabel, offset: number, label: StageLabel, group: Stage) {
     if (!this.stages.has(target)) {
       throw new Error(`Target group ${target} doesn't exist`);
     }
@@ -60,9 +83,9 @@ export class Schedule implements Runnable {
       throw new Error(`A group with label ${label} already exist!`);
     }
 
-    const target_index = this.ordered.findIndex((x) => x[0] === target);
+    const targetIndex = this.ordered.findIndex((x) => x[0] === target);
 
-    insert_at(this.ordered, target_index + offset, [label, group]);
+    insertAt(this.ordered, targetIndex + offset, [label, group]);
     this.stages.set(label, group);
   }
 }

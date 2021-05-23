@@ -1,7 +1,7 @@
 import { ComponentId, ComponentMask, Component, Components, INVALID_COMPONENT_ID } from "./mod";
 import { COMPONENT_ID_PROP_KEY } from "../constants";
-import { runtime } from "../world/runtime";
-import { has_own_property } from "@dreki.land/shared";
+import { Runtime } from "../world/runtime";
+import { hasOwnProperty, record } from "@dreki.land/shared";
 
 /**
  * Component type
@@ -27,8 +27,8 @@ export type ComponentInfo = {
  * @param component
  * @returns
  */
-export function get_component_info_or_register(component: Component) {
-  return runtime.components.get(get_component_id(component)) ?? register(component)[0];
+export function getComponentInfoOrRegister(component: Component) {
+  return Runtime.components.get(getComponentId(component)) ?? register(component)[0];
 }
 
 /**
@@ -36,18 +36,20 @@ export function get_component_info_or_register(component: Component) {
  * @param component
  * @returns
  */
-export function get_component_id(component: Component): ComponentId {
-  return has_own_property(component, COMPONENT_ID_PROP_KEY)
-    ? (component[COMPONENT_ID_PROP_KEY] as ComponentId) ?? INVALID_COMPONENT_ID
+export function getComponentId(component: Component): ComponentId {
+  return hasOwnProperty(component as unknown as record, COMPONENT_ID_PROP_KEY)
+    ? ((component as ComponentWithId)[COMPONENT_ID_PROP_KEY] as ComponentId) ?? INVALID_COMPONENT_ID
     : INVALID_COMPONENT_ID;
 }
+
+type ComponentWithId = Component & { [COMPONENT_ID_PROP_KEY]: ComponentId };
 
 /**
  * Determines if a component is a tag eg. contains no properties.
  * @param component
  * @returns
  */
-function is_tag_internal(component: Component) {
+function isTagInternal(component: Component) {
   return Object.getOwnPropertyNames(new component()).length === 0;
 }
 
@@ -62,12 +64,12 @@ export function register(...components: Components) {
 
   for (let i = 0; i < components.length; i++) {
     const component = components[i];
-    const id = ++runtime.component_id_counter;
+    const id = ++Runtime.componentIdCounter;
     const info: ComponentInfo = {
       id,
       mask: 1 << id,
       component,
-      type: is_tag_internal(component) ? ComponentType.Tag : ComponentType.Data,
+      type: isTagInternal(component) ? ComponentType.Tag : ComponentType.Data,
       super: undefined,
     };
 
@@ -78,13 +80,13 @@ export function register(...components: Components) {
       enumerable: false,
     });
 
-    runtime.components.set(id, info);
+    Runtime.components.set(id, info);
     result.push(info);
   }
 
-  const parent_pairs = resolve_closest_parents(Array.from(runtime.components.values()));
-  for (const [info, parent] of parent_pairs) {
-    runtime.components.get(info.id)!.super = parent;
+  const parentPairs = resolveClosestParents(Array.from(Runtime.components.values()));
+  for (const [info, parent] of parentPairs) {
+    Runtime.components.get(info.id)!.super = parent;
   }
 
   return result;
@@ -108,13 +110,13 @@ export function register(...components: Components) {
  * @param infos
  * @returns
  */
-export function resolve_closest_parents(infos: ComponentInfo[]) {
+function resolveClosestParents(infos: ComponentInfo[]) {
   const result: [info: ComponentInfo, parent: Component | undefined][] = [];
-  const mapped_to_types = infos.map((x) => x.component);
+  const mappedToTypes = infos.map((x) => x.component);
 
   for (const info of infos) {
     const type = info.component;
-    const ancestors = mapped_to_types
+    const ancestors = mappedToTypes
       .filter((x) => type.prototype instanceof x)
       .map((x) => ({ value: 0, type: x }));
 

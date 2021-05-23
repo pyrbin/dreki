@@ -1,127 +1,125 @@
-import { SparseSet } from "@dreki.land/collections";
+import { SparseSet } from "@dreki.land/shared";
 import { ComponentId } from "../component/mod";
 import { ComponentStorage, EntitySlice } from "./components";
-import {
-  ComponentInfo,
-  get_component_id,
-  get_component_info_or_register,
-} from "../component/register";
+import { ComponentInfo, getComponentId, getComponentInfoOrRegister } from "../component/register";
 import { ProxyObserver } from "./proxy";
 import type { Entity } from "../entity/mod";
 import { PhantomComponentStorage } from "./phantom";
-import { ComponentSparseSet } from "./sparse-set";
+import { ComponentSparseSet } from "./sparse_set";
 
 export class Storage {
   readonly sets: SparseSet<ComponentId, ComponentStorage>;
   readonly observer: ProxyObserver;
 
+  /**
+   * Create a storage of components.
+   * @param initialComponentCount - initial storage size.
+   * @param changedCallback - this is called whenever a observed component have been changed.
+   */
   constructor(
-    initial_component_count: number,
-    changed_callback?: (entity: Entity, storage: ComponentStorage) => unknown,
+    initialComponentCount: number,
+    changedCallback?: (entity: Entity, storage: ComponentStorage) => unknown,
   ) {
-    this.sets = new SparseSet(initial_component_count);
+    this.sets = new SparseSet(initialComponentCount);
     this.observer = new ProxyObserver((entity, component) =>
-      changed_callback?.(entity, this.sets.get(component)!),
+      changedCallback?.(entity, this.sets.get(component)!),
     );
   }
 
   get(id: ComponentId) {
-    return this.sets.get_unchecked(id);
+    return this.sets.getUnchecked(id);
   }
 
-  get_observed(entity: Entity, info: ComponentInfo) {
+  getObserved(entity: Entity, info: ComponentInfo) {
     return this.observer.track(this.get(info.id).get(entity), entity, info.id);
   }
 
-  get_or_create(info: ComponentInfo, with_capacity: number): ComponentStorage {
+  getOrCreate(info: ComponentInfo, withCapacity: number): ComponentStorage {
     let storage: ComponentStorage | undefined = undefined;
 
     if (!this.sets.contains(info.id)) {
       // Determine if this component set should reference an existing or not.
-      if (info.super && get_component_id(info.super)) {
+      if (info.super && getComponentId(info.super)) {
         // If component info has a super registered & that super class is registered as a component,
         // get or create it's storage & create a phantom storage.
-        const parent = this.get_or_create(
-          get_component_info_or_register(info.super),
-          with_capacity,
-        );
+        const parent = this.getOrCreate(getComponentInfoOrRegister(info.super), withCapacity);
         storage = new PhantomComponentStorage(info, parent);
       } else {
         // Else create a default component storage.
-        storage = new ComponentSparseSet(with_capacity, info);
+        storage = new ComponentSparseSet(withCapacity, info);
       }
 
       // Creating a new storage may create conflicts between existing phantom -> storage links
-      this.resolve_storage_types_with_inserted(storage);
+      this.#resolveWithNewStorage(storage);
 
       this.sets.insert(info.id, storage);
     }
 
-    return storage ?? this.sets.get_unchecked(info.id);
+    return storage ?? this.sets.getUnchecked(info.id);
   }
 
   /**
    * Resolves existing storage links & types for a new storage that's to be inserted.
    * @param info
-   * @param new_storage
+   * @param newStorage
    */
-  private resolve_storage_types_with_inserted(new_storage: ComponentStorage) {
-    const info = new_storage.info;
+  #resolveWithNewStorage(newStorage: ComponentStorage) {
+    const info = newStorage.info;
     for (const other of this.sets) {
-      const other_info = other.info;
-      if (!other_info?.super || other_info.super !== info.component) continue;
+      const otherStorageInfo = other.info;
+      if (!otherStorageInfo?.super || otherStorageInfo.super !== info.component) continue;
       if (other instanceof PhantomComponentStorage) {
         // If it's a phantom storage, migrate existing entities
         for (const entity of other.entities) {
-          (new_storage as PhantomComponentStorage).entities.add(entity);
+          (newStorage as PhantomComponentStorage).entities.add(entity);
         }
         // migrate removed components/entities
         for (const entity of other.removed) {
-          (new_storage as PhantomComponentStorage).removed.add(entity);
+          (newStorage as PhantomComponentStorage).removed.add(entity);
         }
         // set reference to the new storage that's to be inserted.
-        other.set_reference(new_storage);
+        other.setParentStorage(newStorage);
       } else if (other instanceof ComponentSparseSet) {
         // If it's a non-phantom storage, it should be converted to one & point to the
         // new storage that's to be inserted.
-        const phantom_storage = new PhantomComponentStorage(other_info, new_storage);
+        const phantomStorage = new PhantomComponentStorage(otherStorageInfo, newStorage);
         for (const entity of other.entities) {
           // Migrate existing components & entities.
-          const result = other.get_with_state(entity)!;
-          phantom_storage.insert(entity, result[0], result[1], result[2]);
-          phantom_storage.set_changed_tick(entity, result[3]);
+          const result = other.getWithState(entity)!;
+          phantomStorage.insert(entity, result[0], result[1], result[2]);
+          phantomStorage.setChangedTick(entity, result[3]);
         }
         for (const [entity, component] of other.removed) {
           // migrate removed components/entities
-          new_storage.add_removed(entity, component);
+          newStorage.addRemoved(entity, component);
         }
         for (const [, ph] of other.phantoms) {
           // register previous phantom storages.
-          new_storage.register_phantom(ph);
+          newStorage.registerPhantom(ph);
         }
         // replace old storage with created phantom storage.
-        this.sets.insert(other_info.id, phantom_storage);
+        this.sets.insert(otherStorageInfo.id, phantomStorage);
       }
     }
   }
 
   /**
-   * Check & clamp component change ticks with given `change_tick`
-   * @param change_tick
+   * Check & clamp component change ticks with given `changeTick`
+   * @param changeTick
    */
-  check_change_ticks(change_tick: number) {
+  checkChangeTicks(changeTick: number) {
     for (let i = 0; i < this.sets.dense.length; i++) {
-      this.sets.dense.raw[i].check_ticks(change_tick);
+      this.sets.dense.raw[i].checkTicks(changeTick);
     }
   }
 
   /**
    * Clear remove caches in storages.
-   * @param change_tick
+   * @param changeTick
    */
-  clear_removed_cache() {
+  clearRemovedCache() {
     for (let i = 0; i < this.sets.dense.length; i++) {
-      this.sets.dense.raw[i].clear_removed();
+      this.sets.dense.raw[i].clearRemoved();
     }
   }
 
@@ -141,7 +139,7 @@ export class Storage {
    * @param components
    * @returns
    */
-  shortest_slice_of(...components: ComponentInfo[]): EntitySlice | undefined {
+  shortestSliceOf(...components: ComponentInfo[]): EntitySlice | undefined {
     let length = 0xfffff;
     let set: ComponentStorage | undefined = undefined;
 
@@ -154,15 +152,15 @@ export class Storage {
         set = current;
       }
     }
-    return set?.entity_slice() ?? undefined;
+    return set?.entitySlice() ?? undefined;
   }
 
   /**
-   * Like `shortest_slice_of` but also includes removed entities since last call to `clear_removed_caches`.
+   * Like `shortestSliceOf` but also includes removed entities since last call to `clearRemovedCaches`.
    * @param components
    * @returns
    */
-  shortest_slice_of_with_removed(...components: ComponentInfo[]): EntitySlice | undefined {
+  shortestSliceOfWithRemoved(...components: ComponentInfo[]): EntitySlice | undefined {
     let length = 0xfffff;
     let set: ComponentStorage | undefined = undefined;
 
@@ -170,13 +168,11 @@ export class Storage {
       const info = components[i];
       const current = this.get(info.id);
       if (current === undefined) return undefined;
-      if (current.length_with_removed < length) {
-        length = current.length_with_removed;
+      if (current.lengthWithRemoved < length) {
+        length = current.lengthWithRemoved;
         set = current;
       }
     }
-    return set?.entity_slice(true) ?? undefined;
+    return set?.entitySlice(true) ?? undefined;
   }
 }
-
-export { Resources } from "./resources";

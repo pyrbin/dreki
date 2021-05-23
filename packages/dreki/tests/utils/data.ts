@@ -32,19 +32,19 @@ export class DoublePoint extends Point {}
 export class ExtendedPoint extends Point {}
 
 export class Point2D extends Point {
-  constructor(x: number = 0, public y: number = 0) {
+  constructor(x = 0, public y: number = 0) {
     super(x);
   }
 }
 
 export class Point3D extends Point2D {
-  constructor(x: number = 0, y: number = 0, public z: number = 0) {
+  constructor(x = 0, y = 0, public z: number = 0) {
     super(x, y);
   }
 }
 
 export class Point4D extends Point3D {
-  constructor(x: number = 0, y: number = 0, z: number = 0, public w: number = 0) {
+  constructor(x = 0, y = 0, z = 0, public w: number = 0) {
     super(x, y, z);
   }
   dispose() {

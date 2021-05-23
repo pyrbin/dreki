@@ -1,4 +1,4 @@
-import { use_allocator } from "./generic";
+import { useAllocator } from "./generic";
 import type { Allocator, TypedArray } from "../types/mod";
 
 /**
@@ -7,9 +7,9 @@ import type { Allocator, TypedArray } from "../types/mod";
  * @param allocator
  * @returns
  */
-export const array_of = <T extends unknown>(size: number, allocator: Allocator<T> = undefined) => {
+export const arrayOf = <T extends unknown>(size: number, allocator: Allocator<T> = undefined) => {
   const array = new Array<T>(size);
-  for (let i = 0; i < size; i++) array[i] = use_allocator(allocator);
+  for (let i = 0; i < size; i++) array[i] = useAllocator(allocator);
   return array;
 };
 
@@ -29,7 +29,7 @@ export const swap = (array: Array<unknown> | TypedArray, i: number, j: number) =
  * @param index
  * @param element
  */
-export const insert_at = <T>(array: Array<T>, index: number, element: T) => {
+export const insertAt = <T>(array: Array<T>, index: number, element: T) => {
   array.splice(index, 0, element);
 };
 
@@ -37,7 +37,7 @@ export const insert_at = <T>(array: Array<T>, index: number, element: T) => {
  *  Returns true if it's a typed array
  * @param array
  */
-export const is_typed_array = <T>(array: T): boolean =>
+export const isTypedArray = <T>(array: T): boolean =>
   array instanceof Int8Array ||
   array instanceof Int16Array ||
   array instanceof Int32Array ||
@@ -53,7 +53,7 @@ export const is_typed_array = <T>(array: T): boolean =>
  * @param size
  * @returns TypedArray
  */
-export const fitting_unsigned_typed_array = (size: number) => {
+export const fittingUnsignedTypedArray = (size: number) => {
   if (size <= 0xff) return Uint8Array;
   if (size <= 0xffff) return Uint16Array;
   if (size <= 0xffffffff) return Uint32Array;

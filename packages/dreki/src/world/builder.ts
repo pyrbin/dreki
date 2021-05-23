@@ -1,4 +1,4 @@
-import { get_or_insert, get_instance_and_type } from "@dreki.land/shared";
+import { getOrInsert, getInstanceAndType } from "@dreki.land/shared";
 import { World, WorldOptions } from "./mod";
 import type { Components } from "../component/mod";
 import { DEFAULT_ENTITY_CAPACITY } from "../constants";
@@ -13,28 +13,28 @@ import { Event, EventStore } from "./events";
  * World builder
  */
 export class WorldBuilder {
-  private readonly startup_stages: StageCreationParams[];
-  private readonly update_stages: StageCreationParams[];
+  readonly #startupStages: StageCreationParams[];
+  readonly #mainStages: StageCreationParams[];
 
-  private readonly startup_systems_map: Map<string, SystemFunc[]>;
-  private readonly update_systems_map: Map<string, SystemFunc[]>;
+  readonly #startupSystemsMap: Map<string, SystemFunc[]>;
+  readonly #mainSystemsMap: Map<string, SystemFunc[]>;
 
-  private readonly world_resources: ResourceInstance[];
-  private readonly world_components: Components;
-  private readonly world_plugins: Plugin[];
-  private readonly world_events: Event[];
-  private readonly options: WorldOptions;
+  readonly #worldResources: ResourceInstance[];
+  readonly #worldComponents: Components;
+  readonly #worldPlugins: Plugin[];
+  readonly #worldEvents: Event[];
+  readonly #options: WorldOptions;
 
   constructor() {
-    this.startup_stages = [];
-    this.update_stages = [];
-    this.startup_systems_map = new Map();
-    this.update_systems_map = new Map();
-    this.world_resources = [];
-    this.world_components = [];
-    this.world_plugins = [];
-    this.world_events = [];
-    this.options = {
+    this.#startupStages = [];
+    this.#mainStages = [];
+    this.#startupSystemsMap = new Map();
+    this.#mainSystemsMap = new Map();
+    this.#worldResources = [];
+    this.#worldComponents = [];
+    this.#worldPlugins = [];
+    this.#worldEvents = [];
+    this.#options = {
       capacity: DEFAULT_ENTITY_CAPACITY,
     };
   }
@@ -44,7 +44,7 @@ export class WorldBuilder {
    * @param options
    */
   with(options: Partial<WorldOptions>) {
-    Object.assign(this.options, options);
+    Object.assign(this.#options, options);
     return this;
   }
 
@@ -53,7 +53,7 @@ export class WorldBuilder {
    * @param plugins
    */
   plugins(...plugins: Plugin[]) {
-    this.world_plugins.push(...plugins);
+    this.#worldPlugins.push(...plugins);
     for (const plugin of plugins) {
       plugin.register(this);
     }
@@ -67,8 +67,8 @@ export class WorldBuilder {
    */
   resources(...resources: (Resource | ResourceInstance)[]) {
     for (let i = 0; i < resources.length; i++) {
-      const [instance] = get_instance_and_type(resources[i]);
-      this.world_resources.push(instance);
+      const [instance] = getInstanceAndType(resources[i]);
+      this.#worldResources.push(instance);
     }
     return this;
   }
@@ -83,7 +83,7 @@ export class WorldBuilder {
    * @param components
    */
   components(...components: Components) {
-    this.world_components.push(...components);
+    this.#worldComponents.push(...components);
     return this;
   }
 
@@ -93,7 +93,7 @@ export class WorldBuilder {
    * @param events
    */
   events(...events: Event[]) {
-    this.world_events.push(...events);
+    this.#worldEvents.push(...events);
     return this;
   }
 
@@ -106,15 +106,15 @@ export class WorldBuilder {
    *
    * ```ts
    * // Add systems to Stages.Update
-   * builder.systems(example_system, other_system);
+   * builder.systems(exampleSystem, otherSystem);
    *
    * // Add systems to stage "ExampleStage"
-   * builder.systems("ExampleStage", example_system, other_system)
+   * builder.systems("ExampleStage", exampleSystem, otherSystem)
    * ```
    * @param params Systems to insert. The first element in the array can be used to specify stage.
    */
   systems(...params: [StageLabel, ...SystemFunc[]] | SystemFunc[]) {
-    this.systems_internal(params, Stages.Update, this.update_systems_map);
+    this.#systemsInternal(params, Stages.Update, this.#mainSystemsMap);
     return this;
   }
 
@@ -124,8 +124,8 @@ export class WorldBuilder {
    * @param label
    * @param stage
    */
-  stage_after(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
-    this.stage_internal(target, label, "after", stage, this.update_stages);
+  stageAfter(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
+    this.#stageInternal(target, label, "after", stage, this.#mainStages);
     return this;
   }
 
@@ -135,8 +135,8 @@ export class WorldBuilder {
    * @param label
    * @param stage
    */
-  stage_before(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
-    this.stage_internal(target, label, "before", stage, this.update_stages);
+  stageBefore(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
+    this.#stageInternal(target, label, "before", stage, this.#mainStages);
     return this;
   }
 
@@ -146,8 +146,8 @@ export class WorldBuilder {
    * @param params
    * @returns
    */
-  startup_systems(...params: [StageLabel, ...SystemFunc[]] | SystemFunc[]) {
-    this.systems_internal(params, StartupStages.Startup, this.startup_systems_map);
+  startupSystems(...params: [StageLabel, ...SystemFunc[]] | SystemFunc[]) {
+    this.#systemsInternal(params, StartupStages.Startup, this.#startupSystemsMap);
     return this;
   }
 
@@ -158,8 +158,8 @@ export class WorldBuilder {
    * @param stage
    * @returns
    */
-  startup_stage_after(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
-    this.stage_internal(target, label, "after", stage, this.startup_stages);
+  startupStageAfter(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
+    this.#stageInternal(target, label, "after", stage, this.#startupStages);
     return this;
   }
 
@@ -170,25 +170,25 @@ export class WorldBuilder {
    * @param stage
    * @returns
    */
-  startup_stage_before(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
-    this.stage_internal(target, label, "before", stage, this.startup_stages);
+  startupStageBefore(target: StageLabel, label: StageLabel, stage: Stage = new Stage()) {
+    this.#stageInternal(target, label, "before", stage, this.#startupStages);
     return this;
   }
 
-  private systems_internal(
+  #systemsInternal(
     params: [StageLabel, ...SystemFunc[]] | SystemFunc[],
-    default_stage: StageLabel,
+    stageName: StageLabel,
     output: Map<string, SystemFunc[]>,
   ) {
-    const with_given_stage = typeof params[0] === "string";
+    const withGivenStage = typeof params[0] === "string";
 
-    const stage = (with_given_stage ? params[0] : default_stage) as StageLabel;
-    const systems = (with_given_stage ? params.slice(1) : params) as SystemFunc[];
+    const stage = (withGivenStage ? params[0] : stageName) as StageLabel;
+    const systems = (withGivenStage ? params.slice(1) : params) as SystemFunc[];
 
-    get_or_insert(output, stage, () => []).push(...systems);
+    getOrInsert(output, stage, () => []).push(...systems);
   }
 
-  private stage_internal(
+  #stageInternal(
     target: StageLabel,
     label: StageLabel,
     order: "before" | "after",
@@ -203,38 +203,38 @@ export class WorldBuilder {
    * @returns
    */
   done(): World {
-    const world = new World(this.options);
+    const world = new World(this.#options);
 
     // Resolve the order of the stages
-    world.scheduler.resolve_stages(this.startup_stages, this.update_stages);
+    world.scheduler.resolveStages(this.#startupStages, this.#mainStages);
 
     // Add systems that have been added outside stage creation
-    for (const [label, systems] of this.update_systems_map.entries()) {
-      world.scheduler.schedule.insert_systems(label, systems);
+    for (const [label, systems] of this.#mainSystemsMap.entries()) {
+      world.scheduler.schedule.addSystems(label, systems);
     }
 
     // Add systems to startup
-    for (const [label, systems] of this.startup_systems_map.entries()) {
-      world.scheduler.startup.insert_systems(label, systems);
+    for (const [label, systems] of this.#startupSystemsMap.entries()) {
+      world.scheduler.startup.addSystems(label, systems);
     }
 
     // Registers components
-    for (const component of this.world_components) {
+    for (const component of this.#worldComponents) {
       world.register(component);
     }
 
     // Adds resources
-    for (const component of this.world_resources) {
-      world.add_resource(component);
+    for (const component of this.#worldResources) {
+      world.addResource(component);
     }
 
     // Adds events
-    for (const event of this.world_events) {
+    for (const event of this.#worldEvents) {
       world.events.set(event, new EventStore<typeof event>());
     }
 
     // Append plugins
-    world.plugins.push(...this.world_plugins);
+    world.plugins.push(...this.#worldPlugins);
 
     return world;
   }

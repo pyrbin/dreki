@@ -1,4 +1,4 @@
-import { Vec, vec } from "@dreki.land/collections";
+import { Vec, vec } from "@dreki.land/shared";
 import { Entity } from "./mod";
 import { MAX_ENTITY_CAPACITY } from "../constants";
 
@@ -6,26 +6,31 @@ export type EntityMeta = {
   generation: number;
 };
 
+/**
+ * A storage of entities
+ */
 export class Entities {
-  private metadata: Vec<EntityMeta>;
+  #metadata: Vec<EntityMeta>;
 
   /**
    * Stores recently freed index. Indices in this list are always
    * prioritized when creating new entities.
    */
-  private freelist: Vec<number>;
+  #freelist: Vec<number>;
+  #len: number;
 
-  private len: number;
+  #onRealloc?: (length: number) => unknown;
 
   /**
-   * Create new entity storage with given capacity. Will call `on_realloc` when reallocations occurs.
+   * Create new entity storage with given capacity. Will call `onRealloc` when reallocations occurs.
    * @param capacity
-   * @param on_realloc
+   * @param onRealloc
    */
-  constructor(capacity: number, private readonly on_realloc?: (length: number) => unknown) {
-    this.metadata = vec(capacity, () => ({ generation: 0 }));
-    this.freelist = vec(32, 0);
-    this.len = 0;
+  constructor(capacity: number, onRealloc?: (length: number) => unknown) {
+    this.#metadata = vec(capacity, () => ({ generation: 0 }));
+    this.#freelist = vec(32, 0);
+    this.#onRealloc = onRealloc;
+    this.#len = 0;
   }
 
   /**
@@ -35,25 +40,25 @@ export class Entities {
    * Throws an error if the MAX_ENTITY_CAPACITY is reached (1_000_000 entities)
    * @returns
    */
-  public allocate(): Entity {
-    this.len++;
-    let index = this.freelist.pop();
+  allocate(): Entity {
+    this.#len++;
+    let index = this.#freelist.pop();
 
-    if (this.len > this.capacity) {
+    if (this.#len > this.capacity) {
       if (this.capacity === MAX_ENTITY_CAPACITY) {
-        this.len--;
+        this.#len--;
         throw new Error(`Can't spawn new entity, max capacity reached (${this.capacity})`);
       }
-      this.metadata.realloc(Math.min(Math.floor(this.capacity * 1.5), MAX_ENTITY_CAPACITY));
-      if (this.on_realloc) this.on_realloc(this.metadata.capacity);
+      this.#metadata.realloc(Math.min(Math.floor(this.capacity * 1.5), MAX_ENTITY_CAPACITY));
+      if (this.#onRealloc) this.#onRealloc(this.#metadata.capacity);
     }
 
     if (index === undefined) {
-      index = this.len - 1;
-      return Entity(index, this.metadata.raw[index].generation);
+      index = this.#len - 1;
+      return Entity(index, this.#metadata.raw[index].generation);
     }
 
-    return Entity(index, this.metadata.raw[index].generation);
+    return Entity(index, this.#metadata.raw[index].generation);
   }
 
   /**
@@ -61,16 +66,16 @@ export class Entities {
    * @param entity
    * @returns
    */
-  public dispose(entity: Entity) {
-    const handle = Entity.handle_of(entity);
-    const meta = this.metadata.raw[handle.index];
+  dispose(entity: Entity) {
+    const handle = Entity.handleOf(entity);
+    const meta = this.#metadata.raw[handle.index];
 
     // don't free if there is a generation mismatch
     if (meta.generation !== handle.generation) return;
 
     meta.generation++;
-    this.freelist.push(handle.index);
-    this.len--;
+    this.#freelist.push(handle.index);
+    this.#len--;
   }
 
   /**
@@ -79,20 +84,20 @@ export class Entities {
    * @returns
    */
   contains(entity: Entity): boolean {
-    const handle = Entity.handle_of(entity);
+    const handle = Entity.handleOf(entity);
     return (
-      handle.index < this.len &&
+      handle.index < this.#len &&
       handle.index >= 0 &&
-      handle.generation === this.metadata.raw[handle.index].generation
+      handle.generation === this.#metadata.raw[handle.index].generation
     );
   }
 
   get capacity() {
-    return this.metadata.capacity;
+    return this.#metadata.capacity;
   }
 
   get length() {
-    return this.len;
+    return this.#len;
   }
 
   /**
@@ -100,14 +105,14 @@ export class Entities {
    * @returns
    */
   [Symbol.iterator](): Iterator<Entity> {
-    let read_index = 0;
-    const data = this.metadata;
-    const length = this.len;
+    let readIndex = 0;
+    const data = this.#metadata;
+    const length = this.#len;
     return {
       next(): IteratorResult<Entity> {
-        if (read_index < length) {
+        if (readIndex < length) {
           return {
-            value: Entity(read_index, data.raw[read_index++].generation),
+            value: Entity(readIndex, data.raw[readIndex++].generation),
           };
         }
         return {
