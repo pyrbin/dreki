@@ -1,5 +1,13 @@
 # dreki
 
+## 0.0.14
+
+### Patch Changes
+
+- c513318: merged shared & collections packages
+- Updated dependencies [c513318]
+  - @dreki.land/shared@0.0.9
+
 ## 0.0.13
 
 ### Patch Changes
