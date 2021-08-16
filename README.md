@@ -1,3 +1,8 @@
+> **UPDATE: 2021-08-16**
+> 
+> project currently on hiatus, if you're looking for a typescript ECS I'd recommend https://github.com/3mcd/javelin
+>
+
 # 🐉 dreki
 
 [![npm version](https://img.shields.io/npm/v/dreki?color=gold&label=dreki%40npm)](https://www.npmjs.com/package/dreki)
