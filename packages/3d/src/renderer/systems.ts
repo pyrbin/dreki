@@ -1,32 +1,35 @@
-import { PerspectiveCamera, WebGLRenderer, Scene } from "three";
-import { World } from "dreki";
-import { WebGLRendererContext } from "./resources";
-import { utils } from "../utils";
+import * as THREE from "three";
+import { events, res, World } from "dreki";
+import { WindowResize } from "../dom/events";
+import { CanvasElement } from "../dom/resources";
+import { MainCamera } from "./components";
+import { CurrentScene } from "../core/components";
 
-export function WebGL_renderer(world: World) {
-  const ctx = world.resource(WebGLRendererContext);
-  if (ctx == undefined) return;
-
-  const camera = utils.cam.main(world) as PerspectiveCamera;
-  const scene = utils.scene.current(world);
-
-  if (resize_renderer(ctx.renderer)) {
-    const canvas = ctx.renderer.domElement;
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-  }
-
-  // render current scene
-  ctx.renderer.render(scene, camera);
+/**
+ * Calls {@link THREE.WebGLRenderer.render} on {@link CurrentScene} for current {@link MainCamera}.
+ * @param world
+ */
+export function renderSystem(world: World) {
+  const renderer = res(THREE.WebGLRenderer);
+  const camera = world.get(world.trySingle(MainCamera)!, THREE.Camera);
+  const scene = world.get(world.trySingle(CurrentScene)!, THREE.Camera);
+  renderer.render(scene, camera);
 }
 
-function resize_renderer(renderer: WebGLRenderer) {
-  const canvas = renderer.domElement;
-  const width = canvas.clientWidth;
-  const height = canvas.clientHeight;
-  const needResize = canvas.width !== width || canvas.height !== height;
-  if (needResize) {
-    renderer.setSize(width, height, false);
-  }
-  return needResize;
+/**
+ * Updates renderer & the main camera on window resize.
+ * @param world
+ */
+export function resizeRendererSystem(world: World) {
+  events(WindowResize).take(1, () => {
+    const [{ value: canvas }, renderer] = res(CanvasElement, THREE.WebGLRenderer);
+    const camera = world.get(world.trySingle(MainCamera)!, THREE.Camera);
+
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      camera.updateProjectionMatrix();
+    }
+  });
 }

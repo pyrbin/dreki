@@ -24,5 +24,8 @@
   },
   "dependencies": {
     "@dreki.land/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "*"
   }
 }

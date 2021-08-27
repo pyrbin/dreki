@@ -14,7 +14,12 @@
     "node": ">=14",
     "pnpm": ">=6"
   },
+  "dependencies": {
+    "three": "^0.128.0",
+    "dreki": "workspace:*"
+  },
   "devDependencies": {
+    "@types/three": "^0.128.0",
     "@changesets/cli": "^2.16.0",
     "@types/jest": "^26.0.23",
     "@typescript-eslint/eslint-plugin": "^4.24.0",

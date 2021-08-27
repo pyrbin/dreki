@@ -1,0 +1,32 @@
+before releasing package:
+
+
+3d DEMO:
+
+  * Simple shooter DEMO
+    * wasd jump movement
+    * gun animation
+    * shoot dummy
+    * damage text
+    * sound
+    * screen shake
+    * breakable container with balls
+      - shootable & interactable balls
+    * toon shader
+  * Object3D hiearchy sync?
+  * Bundles / factory for spawning threejs objects like lights etc
+  * Physics raycasting etc
+  * Better debug rendering
+    - loop each ColliderDebugRendering with no ColliderDebugMeshHandle
+  * Setup paths (dreki-3d/rendering etc)
+  * Collider.auto() try to create collider from nereast mesh (start with hold & move down parents)
+  * See enable3d for some package inspiration (espacially debug rendering in on of their examples)
+  * eslint (or alternative?)
+
+  * if add ColliderBuilder & no RigidBody, create default RigidBody.static()
+  * Object override .add .remove, always spawn children as entities if they dont have userData.dreki.disable_spawn
+
+* object3d.build()
+    .add(() => {
+
+    });

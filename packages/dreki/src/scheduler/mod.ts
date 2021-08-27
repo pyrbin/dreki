@@ -26,7 +26,7 @@ export const StartupStages = labels(DEFAULT_STAGES_PREFIX, {
 });
 
 /**
- * Prefixes the value of each property of given `stages` with ``${prefix}::`` where.
+ * Prefixes the value of each property of given `stages` with ``${prefix}::``.
  *
  * @example
  * ```typescript

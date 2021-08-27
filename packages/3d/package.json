@@ -11,15 +11,18 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "rimraf out && tsc",
+    "build": "rimraf out && tsc -skipLibCheck",
     "build:w": "rimraf out && tsc -w"
   },
   "dependencies": {
-    "@dimforge/rapier3d": "^0.4.1",
     "dreki": "workspace:*",
-    "three": "^0.126.1"
+    "@dimforge/rapier3d-compat": "^0.5.3",
+    "@dreki.land/shared": "workspace:*",
+    "nanoid": "^3.1.23"
   },
-  "devDependencies": {
-    "@types/three": "^0.126.1"
+  "peerDependencies": {
+    "@types/three": "~0.128.0",
+    "dreki": "workspace:*",
+    "three": "~0.128.0"
   }
 }
