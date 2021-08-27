@@ -1,7 +1,8 @@
 import { record } from "@dreki.land/shared";
 import type { World } from "../mod";
+import { createSystemInputContext, SystemInput, SystemInputContext } from "./input";
 import { Schedule } from "./schedule";
-import { Stage, Runnable } from "./stage";
+import { Stage, Runnable, createSystemInput } from "./stage";
 
 const DEFAULT_STAGES_PREFIX = "default";
 
@@ -51,11 +52,15 @@ export type StageCreationParams = {
 /**
  * A scheduler
  */
-export class Scheduler implements Runnable {
+export class Scheduler {
+  readonly context: SystemInputContext;
   readonly startup: Schedule;
   readonly schedule: Schedule;
 
   constructor() {
+    // create initial context
+    this.context = createSystemInputContext();
+
     // update schedule
     this.schedule = new Schedule([Stages.Update, new Stage()]);
     this.schedule.addStageAfter(Stages.Update, Stages.AfterUpdate, new Stage());

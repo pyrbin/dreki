@@ -17,6 +17,16 @@ export type ComponentState = readonly [
 ];
 
 /**
+ * A mutable storage state for a component
+ */
+export type MutableComponentState = [
+  component: ComponentInstance,
+  flags: ComponentFlags,
+  addedTick: ComponentTick,
+  changedTick: ComponentTick,
+];
+
+/**
  * Generic component storage interface type.
  */
 export interface ComponentStorage {
@@ -50,7 +60,8 @@ export interface ComponentStorage {
 
   realloc?(length: number): void;
 
-  entitySlice(withRemoved?: boolean): EntitySlice;
+  entitySlice(): EntitySlice;
+  entitySliceWithRemoved(): EntitySlice;
 
   empty(): boolean;
   readonly length: number;

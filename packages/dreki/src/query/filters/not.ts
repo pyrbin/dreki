@@ -13,7 +13,6 @@ import { FilterType, createFilter } from "../filter";
  * ```
  */
 export const not = createFilter(
-  "not",
   (world, entity, component) => {
     return !world.has(entity, component);
   },

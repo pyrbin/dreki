@@ -82,3 +82,12 @@ export function iter<T = unknown>(length: number, fn: (i: number) => T): Iterabl
 export function isConstructor(target: record) {
   return !!target.prototype && !!target.prototype.constructor.name;
 }
+
+/**
+ * Return the constructor of an object.
+ * @param object
+ * @returns
+ */
+export function ctorof<T extends Type>(object: InstanceType<T>): T {
+  return object?.constructor as T;
+}

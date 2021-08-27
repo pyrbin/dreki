@@ -1,4 +1,5 @@
 import type { Type, ExcludeMethods, record } from "@dreki.land/shared";
+import { COMPONENT_ID_PROP_KEY } from "../constants";
 
 export const INVALID_COMPONENT_ID = -1;
 
@@ -21,7 +22,10 @@ export type IsTag<T extends Component> = {} extends ExcludeMethods<InstanceType<
 /**
  * A component type.
  */
-export type Component<T extends record = record> = Type<T>;
+export type Component<T extends record = record> = Type<T> & {
+  [COMPONENT_ID_PROP_KEY]?: ComponentId;
+};
+
 export type Components = Component[];
 export type ReadonlyComponents = readonly Component[];
 

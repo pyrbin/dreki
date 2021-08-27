@@ -20,4 +20,4 @@ import { createFilter } from "../filter";
  * }
  * ```
  */
-export const changed = createFilter("changed", (world, entity, [, , ...ticks]) => isChanged(ticks));
+export const changed = createFilter((world, entity, [, , ...ticks]) => isChanged(ticks));

@@ -115,10 +115,12 @@ export class PhantomComponentStorage implements ComponentStorage {
     return this.entities.size === 0;
   }
 
-  entitySlice(withRemoved = false) {
-    return withRemoved
-      ? sliceOf([...this.entities, ...this.removed], 0, this.lengthWithRemoved)
-      : sliceOf([...this.entities], 0, this.length);
+  entitySlice() {
+    return sliceOf([...this.entities], 0, this.length);
+  }
+
+  entitySliceWithRemoved() {
+    return sliceOf([...this.entities, ...this.removed], 0, this.lengthWithRemoved);
   }
 
   get parent() {

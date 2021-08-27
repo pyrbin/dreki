@@ -3,7 +3,17 @@ import type { Entity } from "../entity/mod";
 import type { World } from "../mod";
 import type { Component, Components } from "../component/mod";
 import type { ComponentState } from "../storage/components";
+import { FILTER_ID_PROP_KEY } from "../constants";
+import { Runtime } from "../world/runtime";
 
+/**
+ * A filter id
+ */
+export type FilterId = number;
+
+/**
+ * Filer types
+ */
 export enum FilterType {
   /**
    * Omit type filters will omit their included
@@ -30,7 +40,6 @@ export const FILTER_TYPE_KEY = "$$__dreki__filter";
  * @returns
  */
 export function createFilter<T extends readonly FilterType[]>(
-  identifier: string,
   predicate: Predicate<T>,
   ...types: T
 ) {
@@ -43,18 +52,21 @@ export function createFilter<T extends readonly FilterType[]>(
     {},
   );
 
+  const id = Runtime.filterIdCounter++;
+
   const filter = <U extends Components>(...include: U): Filter<T, U> => {
     return {
       include,
-      identifier,
       predicate,
+      [FILTER_ID_PROP_KEY]: id,
       [FILTER_TYPE_KEY]: true,
       ...filterTypes,
     } as Filter<T, U>;
   };
 
   // set identifier
-  filter.identifier = identifier;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (filter as any)[FILTER_ID_PROP_KEY] = id;
 
   return filter;
 }
@@ -109,8 +121,8 @@ export type Filter<
   U extends readonly Component[] = readonly Component[],
 > = {
   include: U;
-  identifier: string;
   predicate: Predicate<T>;
+  [FILTER_ID_PROP_KEY]: number;
   [FILTER_TYPE_KEY]: true;
 } & {
   [K in T[number]]: true;

@@ -1,7 +1,10 @@
+import { record } from "../../../shared/out/mod";
 import type { ComponentId } from "../component/mod";
 import type { ComponentInfo } from "../component/register";
-import { EventsCounter } from "./events";
+import { FilterId } from "../query/filter";
+import { EventReadCounts, EventId } from "./events";
 import type { World, WorldId } from "./mod";
+import { Resource, ResourceId } from "./resources";
 
 /**
  * The Runtime class stores global variables thats related  to the
@@ -9,16 +12,25 @@ import type { World, WorldId } from "./mod";
  * to events etc. It has references to the current world.
  */
 export abstract class Runtime {
-  // world info
-  static worlds: Map<WorldId, World> = new Map();
+  // worlds
+  static worlds: record<WorldId, World> = {};
   static worldIdCounter: WorldId = 0;
 
-  // execution context
+  // schedules & systems
   static currentWorld: World = undefined as unknown as World;
   static lastChangeTick = 0;
-  static lastEventCounts: EventsCounter = new Map();
+  static lastEventCounts: EventReadCounts = {};
 
-  // component info
-  static components: Map<ComponentId, ComponentInfo> = new Map();
-  static componentIdCounter: ComponentId = 0;
+  // components
+  static components: record<ComponentId, ComponentInfo> = {};
+  static componentIdCounter: ComponentId = 1;
+
+  // resources
+  static resourceIdCounter: ResourceId = 1;
+
+  // events
+  static eventIdCounter: EventId = 1;
+
+  // filters
+  static filterIdCounter: FilterId = 1;
 }

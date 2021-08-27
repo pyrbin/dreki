@@ -1,6 +1,6 @@
 import { SparseSet } from "@dreki.land/shared";
 import { ComponentId } from "../component/mod";
-import { ComponentStorage, EntitySlice } from "./components";
+import { ComponentStorage } from "./components";
 import { ComponentInfo, getComponentId, getComponentInfoOrRegister } from "../component/register";
 import { ProxyObserver } from "./proxy";
 import type { Entity } from "../entity/mod";
@@ -93,9 +93,9 @@ export class Storage {
           // migrate removed components/entities
           newStorage.addRemoved(entity, component);
         }
-        for (const [, ph] of other.phantoms) {
+        for (const key in other.phantoms) {
           // register previous phantom storages.
-          newStorage.registerPhantom(ph);
+          newStorage.registerPhantom(other.phantoms[key]);
         }
         // replace old storage with created phantom storage.
         this.sets.insert(otherStorageInfo.id, phantomStorage);
@@ -131,48 +131,5 @@ export class Storage {
     for (let i = 0; i < this.sets.dense.length; i++) {
       this.sets.dense.raw[i].realloc?.(length);
     }
-  }
-
-  /**
-   * Returns a slice of entities from the component set with shortest entity count or
-   * undefined if an ID of the given component infos haven't been registered.
-   * @param components
-   * @returns
-   */
-  shortestSliceOf(...components: ComponentInfo[]): EntitySlice | undefined {
-    let length = 0xfffff;
-    let set: ComponentStorage | undefined = undefined;
-
-    for (let i = 0; i < components.length; i++) {
-      const info = components[i];
-      const current = this.get(info.id);
-      if (current === undefined) return undefined;
-      if (current.length < length) {
-        length = current.length;
-        set = current;
-      }
-    }
-    return set?.entitySlice() ?? undefined;
-  }
-
-  /**
-   * Like `shortestSliceOf` but also includes removed entities since last call to `clearRemovedCaches`.
-   * @param components
-   * @returns
-   */
-  shortestSliceOfWithRemoved(...components: ComponentInfo[]): EntitySlice | undefined {
-    let length = 0xfffff;
-    let set: ComponentStorage | undefined = undefined;
-
-    for (let i = 0; i < components.length; i++) {
-      const info = components[i];
-      const current = this.get(info.id);
-      if (current === undefined) return undefined;
-      if (current.lengthWithRemoved < length) {
-        length = current.lengthWithRemoved;
-        set = current;
-      }
-    }
-    return set?.entitySlice(true) ?? undefined;
   }
 }

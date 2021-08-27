@@ -1,16 +1,17 @@
+import { record } from "@dreki.land/shared";
 import { Allocator, Disposable, iter, swap, Vec, vec, sliceOf } from "@dreki.land/shared";
 import {
   ComponentInstance,
   ComponentFlags,
-  Component,
   ComponentTick,
   isAdded,
   isChanged,
+  ComponentId,
 } from "../component/mod";
 import { ComponentInfo } from "../component/register";
 import { MAX_CHANGE_TICK_DELTA } from "../constants";
 import { Entity } from "../entity/mod";
-import { ComponentStorage } from "./components";
+import { ComponentState, ComponentStorage, MutableComponentState } from "./components";
 import { PhantomComponentStorage } from "./phantom";
 
 /**
@@ -20,7 +21,8 @@ export class ComponentSparseSet implements ComponentStorage {
   readonly info: ComponentInfo;
   readonly dense: Vec<ComponentInstance>;
   readonly entities: Vec<Entity>;
-  readonly sparse: Map<Entity, number>;
+
+  readonly sparse: record<Entity, number | undefined>;
   readonly removed: Map<Entity, ComponentInstance>;
 
   readonly flags: Vec<ComponentFlags>;
@@ -31,26 +33,26 @@ export class ComponentSparseSet implements ComponentStorage {
    * Phantom storages that references this storage are stored here so it can
    * be notified if a component of it's component type has been removed.
    */
-  readonly phantoms: Map<Component, PhantomComponentStorage>;
+  readonly phantoms: record<ComponentId, PhantomComponentStorage>;
 
   /**
    * Registeres a phantom storage.
    * @param reference
    */
   registerPhantom(reference: PhantomComponentStorage) {
-    this.phantoms.set(reference.info.component, reference);
+    this.phantoms[reference.info.id] = reference;
   }
 
   constructor(capacity: number, info: ComponentInfo, allocator?: Allocator<ComponentInstance>) {
     // storage metadata
     this.info = info;
-    this.phantoms = new Map();
+    this.phantoms = {};
     this.removed = new Map();
 
     // component storage
     this.dense = vec(capacity, allocator);
     this.entities = vec(capacity, () => Entity.none);
-    this.sparse = new Map();
+    this.sparse = {};
 
     // component state
     this.added = new Uint32Array(iter(capacity, () => 0));
@@ -76,19 +78,18 @@ export class ComponentSparseSet implements ComponentStorage {
     flags: ComponentFlags,
     changeTick: ComponentTick,
   ): ComponentInstance {
-    const denseIndex = this.sparse.get(entity);
+    const denseIndex = this.sparse[entity];
 
     if (denseIndex == undefined) {
       return this.#allocateNew(entity, value, flags, changeTick);
     }
 
-    if (this.phantoms.size > 0) {
-      // Remove from phantom storages
-      for (const phantom of this.phantoms.values()) {
-        const matchInstance = value instanceof phantom?.info.component;
-        if (!matchInstance) {
-          phantom?.entities.delete(entity);
-        }
+    // remove from phantom storages
+    for (const key in this.phantoms) {
+      const phantom = this.phantoms[key];
+      const matchInstance = value instanceof phantom?.info.component;
+      if (!matchInstance) {
+        phantom?.entities.delete(entity);
       }
     }
 
@@ -107,7 +108,7 @@ export class ComponentSparseSet implements ComponentStorage {
     changeTick: ComponentTick,
   ) {
     const denseIndex = this.dense.length;
-    this.sparse.set(entity, denseIndex);
+    this.sparse[entity] = denseIndex;
     this.entities.push(entity);
     this.dense.push(value);
     this.flags.push(flags);
@@ -123,13 +124,13 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   remove(entity: Entity) {
-    const denseIndex = this.sparse.get(entity);
+    const denseIndex = this.sparse[entity];
 
     if (denseIndex == undefined) {
       return false;
     }
 
-    this.sparse.delete(entity);
+    this.sparse[entity] = undefined;
 
     const currentLength = this.entities.length - 1;
 
@@ -139,19 +140,18 @@ export class ComponentSparseSet implements ComponentStorage {
     swap(this.added, denseIndex, currentLength);
     swap(this.changed, denseIndex, currentLength);
 
-    // Remove component
+    // remove component
     const value = this.dense.swapRemove(denseIndex);
 
-    // Add to remove buffer
+    // add to remove buffer
     this.removed.set(entity, value);
 
-    if (this.phantoms.size > 0) {
-      // Remove from phantom storages
-      for (const phantom of this.phantoms.values()) {
-        if (phantom.entities.has(entity)) {
-          phantom.entities.delete(entity);
-          phantom.removed.add(entity);
-        }
+    // remove from phantom storages
+    for (const key in this.phantoms) {
+      const phantom = this.phantoms[key];
+      if (phantom.entities.has(entity)) {
+        phantom.entities.delete(entity);
+        phantom.removed.add(entity);
       }
     }
 
@@ -159,7 +159,7 @@ export class ComponentSparseSet implements ComponentStorage {
 
     if (!isLast) {
       const swappedEntity = this.entities.raw[denseIndex];
-      this.sparse.set(swappedEntity, denseIndex);
+      this.sparse[swappedEntity] = denseIndex;
     }
 
     return true;
@@ -171,7 +171,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   get(entity: Entity) {
-    return this.dense.raw[this.sparse.get(entity)!];
+    return this.dense.raw[this.sparse[entity]!];
   }
 
   /**
@@ -180,7 +180,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   has(entity: Entity) {
-    return this.sparse.has(entity);
+    return Boolean(this.sparse[entity]);
   }
 
   /**
@@ -189,7 +189,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param fn
    */
   setFlag(entity: Entity, fn: (flag: ComponentFlags) => ComponentFlags) {
-    const denseIndex = this.sparse.get(entity)!;
+    const denseIndex = this.sparse[entity]!;
     this.flags.raw[denseIndex] = fn(this.flags.raw[denseIndex]);
   }
 
@@ -199,7 +199,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param changedTick
    */
   setAddedTick(entity: Entity, changedTick: number) {
-    const denseIndex = this.sparse.get(entity)!;
+    const denseIndex = this.sparse[entity]!;
     this.added[denseIndex] = changedTick;
   }
 
@@ -209,7 +209,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @param changedTick
    */
   setChangedTick(entity: Entity, changedTick: number) {
-    const denseIndex = this.sparse.get(entity)!;
+    const denseIndex = this.sparse[entity]!;
     this.changed[denseIndex] = changedTick;
   }
 
@@ -234,20 +234,25 @@ export class ComponentSparseSet implements ComponentStorage {
   }
 
   /**
+   * Array used when returning state from {@link ComponentSparseSet.getWithState} to avoid GC.
+   */
+  static readonly #stateResult: MutableComponentState = [{}, ComponentFlags.None, 0, 0];
+
+  /**
    * Get component & flags for given entity as a tuple.
    * @param entity
    * @returns
    */
   getWithState(entity: Entity) {
-    const denseIndex = this.sparse.get(entity);
-    return denseIndex != undefined
-      ? ([
-          this.dense.raw[denseIndex],
-          this.flags.raw[denseIndex],
-          this.added[denseIndex],
-          this.changed[denseIndex],
-        ] as const)
-      : undefined;
+    const denseIndex = this.sparse[entity];
+    if (denseIndex == undefined) return undefined;
+
+    ComponentSparseSet.#stateResult[0] = this.dense.raw[denseIndex];
+    ComponentSparseSet.#stateResult[1] = this.flags.raw[denseIndex];
+    ComponentSparseSet.#stateResult[2] = this.added[denseIndex];
+    ComponentSparseSet.#stateResult[3] = this.changed[denseIndex];
+
+    return ComponentSparseSet.#stateResult as ComponentState;
   }
 
   /**
@@ -256,7 +261,7 @@ export class ComponentSparseSet implements ComponentStorage {
    * @returns
    */
   getTicks(entity: Entity) {
-    const denseIndex = this.sparse.get(entity)!;
+    const denseIndex = this.sparse[entity]!;
     return [this.added[denseIndex], this.changed[denseIndex]] as const;
   }
 
@@ -345,10 +350,16 @@ export class ComponentSparseSet implements ComponentStorage {
    * Returns an entity slice for this storage.
    * @returns
    */
-  entitySlice(withRemoved = false) {
-    return withRemoved
-      ? sliceOf([...this.entities.raw, ...this.removed.keys()], 0, this.lengthWithRemoved)
-      : sliceOf(this.entities.raw, 0, this.length);
+  entitySlice() {
+    return sliceOf(this.entities.raw, 0, this.length);
+  }
+
+  /**
+   * Returns an entity slice for this storage with removed.
+   * @returns
+   */
+  entitySliceWithRemoved() {
+    return sliceOf([...this.entities.raw, ...this.removed.keys()], 0, this.lengthWithRemoved);
   }
 
   get lengthWithRemoved() {

@@ -15,7 +15,7 @@ npm i dreki
 ## 📜 Example
 
 ```ts
-import { World, query } from "dreki";
+import { World, SysInput } from "dreki";
 import { not } from "dreki/filters";
 
 class Dead {}
@@ -25,12 +25,12 @@ class Position {
   y: = 0;
 }
 
-const alive = query(not(Dead), Position);
+function aliveSystem({ query }: SysInput) {
 
-function aliveSystem() {
-  for (const [pos] of alive) {
+  for (const [pos] of query(not(Dead), Position)) {
     // do something to alive entities ...
   }
+
 }
 
 const world = World.build()

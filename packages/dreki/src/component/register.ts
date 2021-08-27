@@ -1,7 +1,7 @@
 import { ComponentId, ComponentMask, Component, Components, INVALID_COMPONENT_ID } from "./mod";
 import { COMPONENT_ID_PROP_KEY } from "../constants";
 import { Runtime } from "../world/runtime";
-import { hasOwnProperty, record } from "@dreki.land/shared";
+import { defineIdentifier } from "../utils";
 
 /**
  * Component type
@@ -28,7 +28,7 @@ export type ComponentInfo = {
  * @returns
  */
 export function getComponentInfoOrRegister(component: Component) {
-  return Runtime.components.get(getComponentId(component)) ?? register(component)[0];
+  return Runtime.components[getComponentId(component) ?? register(component)[0]];
 }
 
 /**
@@ -37,12 +37,8 @@ export function getComponentInfoOrRegister(component: Component) {
  * @returns
  */
 export function getComponentId(component: Component): ComponentId {
-  return hasOwnProperty(component as unknown as record, COMPONENT_ID_PROP_KEY)
-    ? ((component as ComponentWithId)[COMPONENT_ID_PROP_KEY] as ComponentId) ?? INVALID_COMPONENT_ID
-    : INVALID_COMPONENT_ID;
+  return (component[COMPONENT_ID_PROP_KEY] as ComponentId) ?? INVALID_COMPONENT_ID;
 }
-
-type ComponentWithId = Component & { [COMPONENT_ID_PROP_KEY]: ComponentId };
 
 /**
  * Determines if a component is a tag eg. contains no properties.
@@ -73,20 +69,16 @@ export function register(...components: Components) {
       super: undefined,
     };
 
-    Object.defineProperty(component, COMPONENT_ID_PROP_KEY, {
-      value: id,
-      writable: false,
-      configurable: false,
-      enumerable: false,
-    });
+    defineIdentifier(component, id, COMPONENT_ID_PROP_KEY);
 
-    Runtime.components.set(id, info);
+    Runtime.components[id] = info;
     result.push(info);
   }
 
-  const parentPairs = resolveClosestParents(Array.from(Runtime.components.values()));
+  const parentPairs = resolveClosestParents(Array.from(Object.values(Runtime.components)));
+
   for (const [info, parent] of parentPairs) {
-    Runtime.components.get(info.id)!.super = parent;
+    Runtime.components[info.id]!.super = parent;
   }
 
   return result;

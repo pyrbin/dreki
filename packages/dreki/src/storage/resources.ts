@@ -1,15 +1,17 @@
-import { Disposable } from "@dreki.land/shared";
-import { Resource, ResourceInstance } from "../world/resources";
+import { Disposable, record, ctorof } from "@dreki.land/shared";
+import { RESOURCE_ID_PROP_KEY } from "../constants";
+import { defineIdentifier } from "../utils";
+import { Resource, ResourceId, ResourceInstance } from "../world/resources";
+import { Runtime } from "../world/runtime";
 
 /**
- * Storage for resources. Currently just a wrapper around a
- * Map with the constructor as `key` and the instance as `value`.
+ * Storage for resources.
  */
 export class Resources implements Disposable {
-  readonly data: Map<Resource, ResourceInstance>;
+  readonly data: record<ResourceId, ResourceInstance | undefined>;
 
   constructor() {
-    this.data = new Map();
+    this.data = {};
   }
 
   /**
@@ -18,10 +20,10 @@ export class Resources implements Disposable {
    * @param resource
    */
   insert<T extends Resource>(resource: InstanceType<T>) {
-    if (this.data.has(resource.constructor as Resource)) {
-      throw new Error(`Resource of type ${resource.constructor} already exists!`);
-    }
-    this.data.set(resource.constructor as Resource, resource);
+    return (this.data[
+      ctorof(resource)[RESOURCE_ID_PROP_KEY] ??
+        defineIdentifier(ctorof(resource), ++Runtime.resourceIdCounter, RESOURCE_ID_PROP_KEY)
+    ] = resource);
   }
 
   /**
@@ -30,7 +32,7 @@ export class Resources implements Disposable {
    * @returns
    */
   get<T extends Resource>(resource: T) {
-    return this.data.get(resource) as InstanceType<T> | undefined;
+    return this.data[resource[RESOURCE_ID_PROP_KEY]!];
   }
 
   /**
@@ -39,7 +41,7 @@ export class Resources implements Disposable {
    * @returns
    */
   has<T extends Resource>(resource: T) {
-    return this.data.has(resource);
+    return Boolean(this.data[resource[RESOURCE_ID_PROP_KEY]!]);
   }
 
   /**
@@ -48,13 +50,9 @@ export class Resources implements Disposable {
    * @returns
    */
   free<T extends Resource>(resource: T) {
-    const value = this.data.get(resource);
-
-    if (value) {
-      (value as Disposable)?.dispose?.();
-      return this.data.delete(resource);
-    }
-
+    const id = resource[RESOURCE_ID_PROP_KEY]!;
+    this.data[id]?.dispose();
+    this.data[id] = undefined;
     return false;
   }
 
@@ -62,8 +60,8 @@ export class Resources implements Disposable {
    * Dispose resources
    */
   dispose() {
-    for (const [res] of this.data) {
-      this.free(res);
+    for (const key in this.data) {
+      if (this.data[key]) this.free(ctorof(this.data[key]!));
     }
   }
 }

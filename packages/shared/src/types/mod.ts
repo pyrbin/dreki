@@ -4,7 +4,7 @@ export * from "./tuple";
  * A generic record type
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type record = Record<string, any>;
+export type record<K extends string | number | symbol = string, V = any> = Record<K, V>;
 
 /**
  * Represents a type

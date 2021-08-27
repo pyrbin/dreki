@@ -13,14 +13,17 @@ import type { Resource } from "./resources";
 import { Storage } from "../storage/mod";
 import { Runtime } from "./runtime";
 import { Scheduler } from "../scheduler/mod";
-import {
-  DEFAULT_ENTITY_CAPACITY,
-  INITIAL_COMPONENT_SPARSE_SETS_COUNT,
-  MAX_ENTITY_CAPACITY,
-} from "../constants";
+import { DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY } from "../constants";
 import { WorldBuilder } from "./builder";
 import type { Plugins } from "./plugin";
-import { EventsCounter, EventStorage, Event, eventInternal, EventWriter } from "./events";
+import {
+  EventReadCounts,
+  Event,
+  EventWriter,
+  EventRecords,
+  createEventReadWrite,
+  EventReadWrite,
+} from "./events";
 import { Commands } from "./commands";
 import { Resources } from "../storage/resources";
 
@@ -29,6 +32,9 @@ import { Resources } from "../storage/resources";
  */
 export type WorldId = number;
 
+/**
+ * World options
+ */
 export type WorldOptions = {
   /**
    * Initial `entity` capacity of the world.
@@ -61,11 +67,11 @@ export class World {
   readonly resources: Resources;
   readonly scheduler: Scheduler;
   readonly plugins: Plugins;
-  readonly events: EventStorage;
+  readonly events: EventRecords;
 
   changeTick = 1;
   lastChangeTick = 0;
-  eventsCounter: EventsCounter;
+  eventReadCounts: EventReadCounts;
 
   #shouldRunStartup = true;
 
@@ -89,24 +95,25 @@ export class World {
    */
   constructor(options?: WorldOptions) {
     this.id = Runtime.worldIdCounter++;
-    Runtime.worlds.set(this.id, this);
+    Runtime.worlds[this.id] = this;
 
     const capacity = Math.min(options?.capacity ?? DEFAULT_ENTITY_CAPACITY, MAX_ENTITY_CAPACITY);
 
-    this.storage = new Storage(INITIAL_COMPONENT_SPARSE_SETS_COUNT, (entity, storage) => {
+    this.resources = new Resources();
+    this.storage = new Storage(32, (entity, storage) => {
       storage?.setChangedTick(entity, this.changeTick);
     });
 
     this.plugins = [];
-    this.events = new Map();
-    this.eventsCounter = new Map();
+
+    this.events = {};
+    this.eventReadCounts = {};
+
     this.scheduler = new Scheduler();
-    this.resources = new Resources();
+
     this.entities = new Entities(capacity, (length) => {
       this.storage.realloc(length);
     });
-
-    this.#updateRuntime();
   }
 
   /**
@@ -335,18 +342,17 @@ export class World {
   }
 
   /**
-   * Get `resource` of given type. Throws [ResourceNotFoundError] if the resource isn't found.
-   * @see ResourceNotFoundError
+   * Fetch resource of given type. Throws [ResourceNotFoundError] if a resource isn't found.
+   * @throws ResourceNotFoundError
    * @param resource
    * @returns
    */
   resource<T extends Resource>(resource: T) {
-    const res = this.resources.get<T>(resource);
-    if (res === undefined) {
+    const instance = this.resources.get(resource);
+    if (instance === undefined) {
       throw new ResourceNotFoundError(this, resource);
-    } else {
-      return res as InstanceType<T>;
     }
+    return resource;
   }
 
   /**
@@ -390,9 +396,9 @@ export class World {
     this.scheduler.run(this);
     this.clearTrackers();
 
-    // update event stores
-    for (const [, store] of this.events) {
-      store.update();
+    // update event records
+    for (const key in this.events) {
+      this.events[key].update();
     }
   }
 
@@ -420,9 +426,6 @@ export class World {
 
     // clear removed trackers
     this.storage.clearRemovedCache();
-
-    // update Runtime
-    this.#updateRuntime();
   }
 
   /**
@@ -450,29 +453,28 @@ export class World {
   }
 
   /**
-   * Retrieves an event read/write access for given component for this world with
-   * this worlds event counter.
+   * Create a read/write access for given Event for this world with given read counts.
    * @param event
+   * @param readCounts
    * @returns
    */
-  event(event: Event) {
-    return eventInternal(event, this, this.eventsCounter);
+  event<T extends Event>(event: T, readCounts: EventReadCounts = this.eventReadCounts) {
+    return createEventReadWrite(event, this, readCounts);
   }
 
   /**
-   * Retrieves an event writer for given event for this world.
+   * Create a write access for given Event for this world.
    * @param event
+   * @param readCounts
    * @returns
    */
-  eventWriter<T extends Event>(event: T): EventWriter<T> {
-    return { emit: eventInternal(event, this, this.eventsCounter)["emit"] };
-  }
-
-  /**
-   * Update Runtime with this World's values.
-   */
-  #updateRuntime() {
-    Runtime.lastChangeTick = this.lastChangeTick;
-    Runtime.lastEventCounts = this.eventsCounter;
+  eventWriter<T extends Event>(event: T) {
+    const access: Partial<EventReadWrite<T>> = createEventReadWrite(
+      event,
+      this,
+      this.eventReadCounts,
+    ) as EventWriter<T>;
+    delete access["emit"];
+    return access as EventWriter<T>;
   }
 }

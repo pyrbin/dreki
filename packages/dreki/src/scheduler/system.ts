@@ -1,43 +1,38 @@
+import { ComponentTick } from "../component/ticks";
 import { MAX_CHANGE_TICK_DELTA } from "../constants";
-import { EventsCounter } from "../world/events";
-import { World } from "../world/mod";
-import { Runtime } from "../world/runtime";
-import { Runnable } from "./stage";
+import { EventReadCounts } from "../world/events";
+import { Executor, SystemInput, SystemInputContext } from "./input";
 
-export type SystemFunc = (world: World) => unknown;
+export type System = (input: SystemInput) => unknown;
 
-export class System implements Runnable {
-  readonly func: SystemFunc;
+export class SystemRunner implements Executor {
+  readonly system: System;
 
-  lastChangeTick: number;
-  eventsCounter: EventsCounter;
+  eventReadCounts: EventReadCounts;
+  changeTick: ComponentTick;
 
-  constructor(func: SystemFunc) {
-    this.func = func;
-    this.lastChangeTick = 0;
-    this.eventsCounter = new Map();
+  constructor(system: System) {
+    this.system = system;
+    this.changeTick = 0;
+    this.eventReadCounts = {};
   }
 
   /**
    * Run this system on given world
    * @param world
    */
-  run(world: World) {
+  run(context: SystemInputContext) {
     // increment world change tick.
-    const lastChangeTick = world.incrementChangeTick();
+    const tick = context.world.incrementChangeTick();
 
-    // set current lastChangeTick Runtime context to current systems tick.
-    Runtime.lastChangeTick = this.lastChangeTick;
-    Runtime.lastEventCounts = this.eventsCounter;
-
-    this.func(world);
-    this.lastChangeTick = lastChangeTick;
+    this.system({ world: context.world, res: context.res, events: context.events });
+    this.changeTick = tick;
   }
 
   checkChangeTick(changeTick: number) {
-    const tickDelta = changeTick - this.lastChangeTick;
+    const tickDelta = changeTick - this.changeTick;
     if (tickDelta > MAX_CHANGE_TICK_DELTA) {
-      this.lastChangeTick = changeTick - MAX_CHANGE_TICK_DELTA;
+      this.changeTick = changeTick - MAX_CHANGE_TICK_DELTA;
     }
   }
 }
